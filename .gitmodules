@@ -1,0 +1,3 @@
+[submodule "html2three"]
+	path = html2three
+	url = ./Code/WebVR/html2three/html2three/

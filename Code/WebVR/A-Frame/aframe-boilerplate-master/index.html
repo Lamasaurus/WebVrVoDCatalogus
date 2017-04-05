@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hello, World! - A-Frame</title>
+    <meta name="description" content="Hello, World! - A-Frame">
+    <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <h1>Title 1</h1>
+    <h3>Title 3</h3>
+    <p>Text</p>
+    <img src="owl.jpg">
+    
+    <script type="text/javascript">
+    	
+      window.onload = function(){
+    		var items = document.body.getElementsByTagName("*");
+
+    		var a_scene = document.createElement("a-scene");
+
+        //Sky
+        var a_sky = document.createElement("a-sky");
+        a_sky.setAttribute("color", "#DDDDDD");
+        a_scene.appendChild(a_sky);
+
+        //Assets
+        var a_assets = document.createElement("a-assets");
+        a_scene.appendChild(a_assets);
+
+        var y_pos = 3;
+        var img_id = 0;
+
+    		for (i = 0; i < items.length; i++) {
+
+            //Text based elements
+    		    if(items[i].tagName == "P" || items[i].tagName.startsWith("H")){
+    		    	var par = document.createElement("a-text");
+    		    	par.setAttribute('color', '#000');
+              par.setAttribute("text","value: " + items[i].innerHTML + ";");
+
+              var scale = 1;
+
+              if(items[i].tagName.startsWith("H")){
+                var num = items[i].tagName.replace('H','');
+                var scale = 3 * (1 - (0.15 * --num));
+              }
+
+              par.setAttribute("scale",scale + " " + scale + " " + scale);
+              par.setAttribute("position",{x : -2, y : y_pos, z : -2});
+    		    	a_scene.appendChild(par);
+
+              y_pos -= 0.15 * scale;
+    		    }
+
+            //Images
+            if(items[i].tagName == "IMG"){
+              var asset = items[i].cloneNode(true);
+              var asset_id = "img-asset-" + img_id++;
+
+              asset.setAttribute("id",asset_id);
+              a_assets.appendChild(asset);
+
+              var img = document.createElement("a-image");
+              img.setAttribute("src","#"+asset_id);
+              img.setAttribute("position",{x : -1.5, y : y_pos - 0.5, z : -2});
+
+              var scale = 1;
+              img.setAttribute("scale",scale + " " + scale + " " + scale);
+
+              a_scene.appendChild(img);
+
+              y_pos -= 1 * scale;
+            }
+
+            items[i].style.display="none";
+    		}
+
+    		document.body.appendChild(a_scene);
+      };
+
+    </script>
+  </body>
+
+</html>
