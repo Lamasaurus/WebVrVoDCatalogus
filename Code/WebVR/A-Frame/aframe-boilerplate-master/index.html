@@ -5,19 +5,53 @@
     <title>Hello, World! - A-Frame</title>
     <meta name="description" content="Hello, World! - A-Frame">
     <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
+
+    <style type="text/css">
+    	p{
+    		color: red;
+    	}
+
+    	body{
+    		background-color: white;
+    	}
+
+    	.float{
+    		float: right;
+    	}
+
+    	.bluediv{
+    		width: 300px;
+    		margin: auto;
+    		background-color: blue;
+    	}
+    </style>
+
   </head>
   <body>
     <h1>Title 1</h1>
     <h3>Title 3</h3>
     <p>Text</p>
+
+    <div class="bluediv">
+    	<h2>A DIV</h2>
+    	<p>A p in a div</p>
+    </div>
+
     <img src="owl.jpg">
+    <h2 class="float">Float</h2>
     
     <script type="text/javascript">
-    	
-      window.onload = function(){
-    		var items = document.body.getElementsByTagName("*");
+    var camera;
 
-    		var a_scene = document.createElement("a-scene");
+    window.onload = function(){
+    	items = new Array(document.body);
+    	var doc_items = document.body.getElementsByTagName("*");
+
+    	for(var i = 0; i < doc_items.length; i++)
+    		items.push(doc_items[i]);
+
+
+    	var a_scene = document.createElement("a-scene");
 
         //Sky
         var a_sky = document.createElement("a-sky");
@@ -28,34 +62,69 @@
         var a_assets = document.createElement("a-assets");
         a_scene.appendChild(a_assets);
 
-        var y_pos = 3;
         var img_id = 0;
+        var z_index = -40;
 
-    		for (i = 0; i < items.length; i++) {
+        var body_width;
 
-            //Text based elements
-    		    if(items[i].tagName == "P" || items[i].tagName.startsWith("H")){
-    		    	var par = document.createElement("a-text");
-    		    	par.setAttribute('color', '#000');
-              par.setAttribute("text","value: " + items[i].innerHTML + ";");
+		var standard_p = document.createElement("p");
+        document.body.appendChild(standard_p);
+        var pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
+        var pixel_text_size = 1/pixels_in_one_unit;
+        document.body.removeChild(standard_p);
 
-              var scale = 1;
+		for (i = 0; i < items.length; i++) {
 
-              if(items[i].tagName.startsWith("H")){
-                var num = items[i].tagName.replace('H','');
-                var scale = 3 * (1 - (0.15 * --num));
-              }
+			element = items[i];
+			console.log(element);
+			element_style = window.getComputedStyle(element);
+			position = element.getBoundingClientRect();
 
-              par.setAttribute("scale",scale + " " + scale + " " + scale);
-              par.setAttribute("position",{x : -2, y : y_pos, z : -2});
-    		    	a_scene.appendChild(par);
+			if(element.tagName == "BODY" || element.tagName == "DIV" ){
+				var pane = document.createElement("a-plane");
 
-              y_pos -= 0.15 * scale;
-    		    }
+				width = (position.right - position.left)/pixels_in_one_unit;
+				height = (position.bottom - position.top)/pixels_in_one_unit;
+
+				if(element.tagName == "BODY")
+					body_width = width;
+
+				pane.setAttribute("width", width);
+				pane.setAttribute("height", height);
+				pane.setAttribute('color', element_style.getPropertyValue("background-color"));
+
+				y_relative = position.top;
+
+				//TODO div staat fout
+				if(element.childNodes.length > 0)
+					y_relative = element.children[0].getBoundingClientRect().top;
+
+				y = y_relative/pixels_in_one_unit - height/2;
+
+				pane.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index - 0.1})
+
+				a_scene.appendChild(pane);
+			}	
+
+        	//Text based elements
+		    if(element.tagName == "P" || element.tagName.startsWith("H")){
+		    	var par = document.createElement("a-text");
+
+
+		    	par.setAttribute('color', element_style.getPropertyValue("color"));
+	            par.setAttribute("text","value: " + element.innerHTML + ";");
+
+	            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
+
+	            par.setAttribute("width",scale * 20);
+	            //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
+	            par.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -position.top/pixels_in_one_unit, z: z_index});
+	    		a_scene.appendChild(par);
+		    }
 
             //Images
-            if(items[i].tagName == "IMG"){
-              var asset = items[i].cloneNode(true);
+            if(element.tagName == "IMG"){
+              var asset = element.cloneNode(true);
               var asset_id = "img-asset-" + img_id++;
 
               asset.setAttribute("id",asset_id);
@@ -63,21 +132,59 @@
 
               var img = document.createElement("a-image");
               img.setAttribute("src","#"+asset_id);
-              img.setAttribute("position",{x : -1.5, y : y_pos - 0.5, z : -2});
 
-              var scale = 1;
-              img.setAttribute("scale",scale + " " + scale + " " + scale);
+              img_width = element.clientWidth / pixels_in_one_unit;
+              img_height = element.clientHeight / pixels_in_one_unit;
+              img.setAttribute("width",img_width);
+              img.setAttribute("height",img_height);
+
+              img.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index})
 
               a_scene.appendChild(img);
-
-              y_pos -= 1 * scale;
             }
 
-            items[i].style.display="none";
-    		}
+            //element.style.display="none";
+		}
 
-    		document.body.appendChild(a_scene);
-      };
+		//Camera
+		camera = document.createElement("a-entity");
+		camera.appendChild(document.createElement("a-camera"));
+		camera.setAttribute("position", body_width/2 + " 0 0");
+
+		a_scene.appendChild(camera);
+
+    	document.body.appendChild(a_scene);
+    };
+
+    document.onkeydown = checkKey;
+
+	function checkKey(e) {
+
+	    e = e || window.event;
+
+	    if (e.keyCode == '65') {
+	    	var pos = camera.getAttribute("position");
+	        camera.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
+	    }
+	    else if (e.keyCode == '69') {
+	        var pos = camera.getAttribute("position");
+	        camera.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
+	    }
+
+	}
+
+    /*setTimeout(function(){
+    	elements = document.getElementsByTagName("a-text");
+    	for(i = 0; i < elements.length; i++){
+    		element = elements[i];
+
+    		pos = element.getAttribute("position");
+    		x = pos.x + 0;
+    		y = pos.y + 3;
+    		z = pos.z + 0;
+    		element.setAttribute("position", x+" "+y+" "+z);
+    	}
+    },3000);*/
 
     </script>
   </body>
