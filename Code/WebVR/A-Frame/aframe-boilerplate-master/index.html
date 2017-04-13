@@ -41,6 +41,13 @@
     <h2 class="float">Float</h2>
     
     <script type="text/javascript">
+
+    class Pane{
+    	constructor(){
+
+    	}
+    }
+
     var camera;
 
     window.onload = function(){
@@ -68,10 +75,13 @@
         var body_width;
 
 		var standard_p = document.createElement("p");
+		standard_p.setAttribute("style", "font-size:1em;")
         document.body.appendChild(standard_p);
         var pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
         var pixel_text_size = 1/pixels_in_one_unit;
         document.body.removeChild(standard_p);
+
+        var div_depth = -0.2;
 
 		for (i = 0; i < items.length; i++) {
 
@@ -79,6 +89,8 @@
 			console.log(element);
 			element_style = window.getComputedStyle(element);
 			position = element.getBoundingClientRect();
+
+			var aelement = null;
 
 			if(element.tagName == "BODY" || element.tagName == "DIV" ){
 				var pane = document.createElement("a-plane");
@@ -93,17 +105,16 @@
 				pane.setAttribute("height", height);
 				pane.setAttribute('color', element_style.getPropertyValue("background-color"));
 
-				y_relative = position.top;
+				y = -position.top/pixels_in_one_unit - height/2;
 
-				//TODO div staat fout
-				if(element.childNodes.length > 0)
-					y_relative = element.children[0].getBoundingClientRect().top;
+				pane.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index + div_depth});
+				div_depth += 0.05;
 
-				y = y_relative/pixels_in_one_unit - height/2;
-
-				pane.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index - 0.1})
+				if(div_depth > 0.9)
+					div_depth = 0.9;
 
 				a_scene.appendChild(pane);
+				aelement = pane;
 			}	
 
         	//Text based elements
@@ -116,10 +127,13 @@
 
 	            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
 
+	            y = (position.bottom - position.top) / 2 + position.top;
+
 	            par.setAttribute("width",scale * 20);
 	            //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
-	            par.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -position.top/pixels_in_one_unit, z: z_index});
+	            par.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -y/pixels_in_one_unit, z: z_index});
 	    		a_scene.appendChild(par);
+	    		aelement = par;
 		    }
 
             //Images
@@ -141,6 +155,11 @@
               img.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index})
 
               a_scene.appendChild(img);
+              aelement = img;
+            }
+
+            if(img != null){
+
             }
 
             //element.style.display="none";
