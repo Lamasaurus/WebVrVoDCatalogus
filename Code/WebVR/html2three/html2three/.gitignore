@@ -1,0 +1,3 @@
+# We don't actually depend on node except for babel
+/node-modules
+/vid
