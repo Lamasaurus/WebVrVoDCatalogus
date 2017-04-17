@@ -46,15 +46,19 @@
     <br>
     <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
     <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
+    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';">Change Text</button>
     <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
     <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
     <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
+    <br>
     
     <script type="text/javascript">
 
     var pixels_in_one_unit,pixel_text_size;
     //Standard z index
     var z_index = -40;
+    //Width of the body
+    var body_width;
 
     class Element{
     	constructor(domelement){
@@ -79,28 +83,63 @@
     		this.update();
 
     		var observer = new MutationObserver(this.update.bind(this));
-    		observer.observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false});
+    		observer.observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
     	}
 
     	update(){
     		var element_style = window.getComputedStyle(this.domelement);
-    		console.log(element_style.getPropertyValue("color"));
 			var position = this.domelement.getBoundingClientRect();
 
-    		this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+			this.aelement.setAttribute("anchor","align");
+			
+			//Calc the y possition
+            var y = -((position.bottom - position.top) / 2 + position.top);
+            this.aelement.setAttribute("position",{x: position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
+
+            //Style attributes
             this.aelement.setAttribute("text","value: " + this.domelement.innerHTML + ";");
-
-            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
-
-            y = (position.bottom - position.top) / 2 + position.top;
-
-            this.aelement.setAttribute("width",scale * 20);
+    		this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
             //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
-            this.aelement.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -y/pixels_in_one_unit, z: z_index});
+
+			//Set width first to 0, else it will get set to 0 after the new width is set
+            this.aelement.setAttribute("width",0);
+            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
+            this.aelement.setAttribute("width",scale * 20);
     	}
     }
 
+    class ContainerElement extends Element{
+    	constructor(domelement, depth){
+    		super(domelement);
 
+    		this.div_depth = depth;
+
+    		this.aelement = document.createElement("a-plane");
+    		this.update();
+
+    		var observer = new MutationObserver(this.update.bind(this));
+    		observer.observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
+    	}
+
+    	update(){
+    		var element_style = window.getComputedStyle(this.domelement);
+			var position = this.domelement.getBoundingClientRect();
+
+    		var width = (position.right - position.left)/pixels_in_one_unit;
+			var height = (position.bottom - position.top)/pixels_in_one_unit;
+
+			if(element.tagName == "BODY")
+				body_width = width;
+
+			this.aelement.setAttribute("width", width);
+			this.aelement.setAttribute("height", height);
+			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
+
+			var y = -position.top/pixels_in_one_unit - height/2;
+
+			this.aelement.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+    	}
+    }
 
     window.onload = function(){
     	items = new Array(document.body);
@@ -122,8 +161,7 @@
         a_scene.appendChild(a_assets);
 
         var img_id = 0;
-
-        var body_width;
+        var div_depth = -0.2;
 
         //Calc the ammount of pixels in 1 meter
 		var standard_p = document.createElement("p");
@@ -132,8 +170,6 @@
         pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
         pixel_text_size = 1/pixels_in_one_unit;
         document.body.removeChild(standard_p);
-
-        var div_depth = -0.2;
 
 		for (i = 0; i < items.length; i++) {
 
@@ -145,7 +181,7 @@
 			var aelement = null;
 
 			if(element.tagName == "BODY" || element.tagName == "DIV" ){
-				var pane = document.createElement("a-plane");
+				/*var pane = document.createElement("a-plane");
 
 				width = (position.right - position.left)/pixels_in_one_unit;
 				height = (position.bottom - position.top)/pixels_in_one_unit;
@@ -166,7 +202,15 @@
 					div_depth = 0.9;
 
 				a_scene.appendChild(pane);
-				aelement = pane;
+				aelement = pane;*/
+
+				containerelement = new ContainerElement(element);
+	    		a_scene.appendChild(containerelement.getAElement());
+
+	    		div_depth += 0.05;
+
+				if(div_depth > 0.9)
+					div_depth = 0.9;
 			}	
 
         	//Text based elements
@@ -239,6 +283,14 @@
     		y = pos.y + 3;
     		z = pos.z + 0;
     		element.setAttribute("position", x+" "+y+" "+z);
+    	}
+    },3000);*/
+
+    /*setTimeout(function(){
+    	elements = document.getElementsByTagName("a-text");
+    	for(i = 0; i < elements.length; i++){
+    		element = elements[i];
+    		element.setAttribute("width", 20);
     	}
     },3000);*/
 
