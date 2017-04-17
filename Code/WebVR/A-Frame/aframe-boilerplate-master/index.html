@@ -52,6 +52,56 @@
     
     <script type="text/javascript">
 
+    var pixels_in_one_unit,pixel_text_size;
+    //Standard z index
+    var z_index = -40;
+
+    class Element{
+    	constructor(domelement){
+    		this.domelement = domelement;
+    		this.aelement = null;
+    	}
+
+    	getAElement(){
+    		return this.aelement;
+    	}
+
+    	getDomElement(){
+    		return this.domelement;
+    	}
+    }
+
+    class TextElement extends Element{
+    	constructor(domelement){
+    		super(domelement);
+
+    		this.aelement = document.createElement("a-text");
+    		this.update();
+
+    		var observer = new MutationObserver(this.update.bind(this));
+    		observer.observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false});
+    	}
+
+    	update(){
+    		var element_style = window.getComputedStyle(this.domelement);
+    		console.log(element_style.getPropertyValue("color"));
+			var position = this.domelement.getBoundingClientRect();
+
+    		this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+            this.aelement.setAttribute("text","value: " + this.domelement.innerHTML + ";");
+
+            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
+
+            y = (position.bottom - position.top) / 2 + position.top;
+
+            this.aelement.setAttribute("width",scale * 20);
+            //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
+            this.aelement.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -y/pixels_in_one_unit, z: z_index});
+    	}
+    }
+
+
+
     window.onload = function(){
     	items = new Array(document.body);
     	var doc_items = document.body.getElementsByTagName("*");
@@ -72,15 +122,15 @@
         a_scene.appendChild(a_assets);
 
         var img_id = 0;
-        var z_index = -40;
 
         var body_width;
 
+        //Calc the ammount of pixels in 1 meter
 		var standard_p = document.createElement("p");
 		standard_p.setAttribute("style", "font-size:1em;")
         document.body.appendChild(standard_p);
-        var pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
-        var pixel_text_size = 1/pixels_in_one_unit;
+        pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
+        pixel_text_size = 1/pixels_in_one_unit;
         document.body.removeChild(standard_p);
 
         var div_depth = -0.2;
@@ -121,21 +171,8 @@
 
         	//Text based elements
 		    if(element.tagName == "P" || element.tagName.startsWith("H")){
-		    	var par = document.createElement("a-text");
-
-
-		    	par.setAttribute('color', element_style.getPropertyValue("color"));
-	            par.setAttribute("text","value: " + element.innerHTML + ";");
-
-	            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
-
-	            y = (position.bottom - position.top) / 2 + position.top;
-
-	            par.setAttribute("width",scale * 20);
-	            //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
-	            par.setAttribute("position",{x: position.left/pixels_in_one_unit, y: -y/pixels_in_one_unit, z: z_index});
-	    		a_scene.appendChild(par);
-	    		aelement = par;
+	    		textelement = new TextElement(element);
+	    		a_scene.appendChild(textelement.getAElement());
 		    }
 
             //Images
@@ -158,10 +195,6 @@
 
               a_scene.appendChild(img);
               aelement = img;
-            }
-
-            if(img != null){
-
             }
 
             //element.style.display="none";
