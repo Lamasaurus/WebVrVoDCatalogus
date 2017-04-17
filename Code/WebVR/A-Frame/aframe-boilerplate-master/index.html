@@ -34,25 +34,23 @@
   <body>
     <h1>Title 1</h1>
     <h3>Title 3</h3>
-    <p>Text</p>
+    <p id="sometext">Text</p>
 
-    <div class="bluediv">
+    <div id="bluediv" class="bluediv">
     	<h2>A DIV</h2>
     	<p>A p in a div</p>
     </div>
 
     <img src="owl.jpg">
     <h2 class="float">Float</h2>
+    <br>
+    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
     
     <script type="text/javascript">
-
-    class Pane{
-    	constructor(){
-
-    	}
-    }
-
-    var camera;
 
     window.onload = function(){
     	items = new Array(document.body);
@@ -170,11 +168,13 @@
 		}
 
 		//Camera
-		camera = document.createElement("a-entity");
-		camera.appendChild(document.createElement("a-camera"));
-		camera.setAttribute("position", body_width/2 + " 0 0");
+		camera_entity = document.createElement("a-entity");
+		camera_entity.setAttribute("position", body_width/2 + " 0 0");
+		camera = document.createElement("a-camera");
+		camera.setAttribute("position", "0 0 0");
+		camera_entity.appendChild(camera);
 
-		a_scene.appendChild(camera);
+		a_scene.appendChild(camera_entity);
 
     	document.body.appendChild(a_scene);
     };
@@ -196,7 +196,7 @@
 
 	}
 
-    setTimeout(function(){
+    /*setTimeout(function(){
     	elements = document.getElementsByTagName("a-text");
     	for(i = 0; i < elements.length; i++){
     		element = elements[i];
@@ -207,7 +207,7 @@
     		z = pos.z + 0;
     		element.setAttribute("position", x+" "+y+" "+z);
     	}
-    },3000);
+    },3000);*/
 
     </script>
   </body>
