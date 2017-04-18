@@ -43,6 +43,7 @@
 
     <img src="owl.jpg">
     <h2 class="float">Float</h2>
+
     <br>
     <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
     <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
@@ -82,8 +83,7 @@
     		this.aelement = document.createElement("a-text");
     		this.update();
 
-    		var observer = new MutationObserver(this.update.bind(this));
-    		observer.observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
+    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
     	}
 
     	update(){
@@ -117,8 +117,7 @@
     		this.aelement = document.createElement("a-plane");
     		this.update();
 
-    		var observer = new MutationObserver(this.update.bind(this));
-    		observer.observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
+    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false});
     	}
 
     	update(){
@@ -178,8 +177,6 @@
 			element_style = window.getComputedStyle(element);
 			position = element.getBoundingClientRect();
 
-			var aelement = null;
-
 			if(element.tagName == "BODY" || element.tagName == "DIV" ){
 				/*var pane = document.createElement("a-plane");
 
@@ -204,7 +201,8 @@
 				a_scene.appendChild(pane);
 				aelement = pane;*/
 
-				containerelement = new ContainerElement(element);
+
+				containerelement = new ContainerElement(element,div_depth);
 	    		a_scene.appendChild(containerelement.getAElement());
 
 	    		div_depth += 0.05;
@@ -238,7 +236,6 @@
               img.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index})
 
               a_scene.appendChild(img);
-              aelement = img;
             }
 
             //element.style.display="none";
