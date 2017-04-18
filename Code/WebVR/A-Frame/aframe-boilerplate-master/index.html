@@ -75,7 +75,7 @@
     		this.aelement = null;
 
     		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
-    		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
+    		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
     	}
 
     	getAElement(){
@@ -99,7 +99,6 @@
     		var element_style = window.getComputedStyle(this.domelement);
 			var position = this.domelement.getBoundingClientRect();
 
-			this.aelement.setAttribute("anchor","align");
 			
 			//Calc the y possition
             var y = -((position.bottom - position.top) / 2 + position.top);
@@ -107,13 +106,20 @@
 
             //Style attributes
             this.aelement.setAttribute("text","value: " + this.domelement.innerHTML + ";");
-    		this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+
+            //First reset the color of the text to black and then to the color the text really has to be
+            this.aelement.setAttribute('color', "rgb(0,0,0)");
+    		this.aelement.setAttribute('color', ""+element_style.getPropertyValue("color"));
             //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
 
 			//Set width first to 0, else it will get set to 0 after the new width is set
             this.aelement.setAttribute("width",0);
             var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
             this.aelement.setAttribute("width",scale * 20);
+
+            //First reset the anchor to nothing and then back to left
+			this.aelement.setAttribute("anchor","");
+			this.aelement.setAttribute("anchor","left");
     	}
     }
 
@@ -179,9 +185,25 @@
     	}
     }
 
-    function UpdateAll(){
+    var grabbing = false;
+
+    function IsDragEvent(element){
+    	if(element.tagName == "BODY" && element.classList.contains("a-grabbing") && !grabbing){
+			grabbing = true;
+			return true;
+		}else if(element.tagName == "BODY" && !element.classList.contains("a-grabbing") && grabbing){
+			grabbing = false;
+			return true;
+		}
+
+		return false;
+    }
+
+    function UpdateAll(mutations){
     	if(update_all){
-    		this.update();
+    		if(IsDragEvent(this.getDomElement()))
+    			return;
+
 	    	for(var i = 0; i < a_elements.length; i++)
 	    		a_elements[i].update();
     	}
