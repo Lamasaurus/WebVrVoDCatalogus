@@ -38,7 +38,7 @@
 
     <div id="bluediv" class="bluediv">
     	<h2>A DIV</h2>
-    	<p>A p in a div</p>
+    	<p id="divtext">A p in a div</p>
     </div>
 
     <img src="owl.jpg">
@@ -51,6 +51,8 @@
     <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
     <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
     <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
+    <button onclick="update_all = !update_all;">Toggle Update All</button>
     <br>
     
     <script type="text/javascript">
@@ -61,10 +63,19 @@
     //Width of the body
     var body_width;
 
+    var update_all = false;
+
+    var a_elements = new Array();
+
+    var img_id = 0;
+
     class Element{
     	constructor(domelement){
     		this.domelement = domelement;
     		this.aelement = null;
+
+    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
+    		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
     	}
 
     	getAElement(){
@@ -82,8 +93,6 @@
 
     		this.aelement = document.createElement("a-text");
     		this.update();
-
-    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: true});
     	}
 
     	update(){
@@ -116,8 +125,6 @@
 
     		this.aelement = document.createElement("a-plane");
     		this.update();
-
-    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false});
     	}
 
     	update(){
@@ -137,6 +144,46 @@
 			var y = -position.top/pixels_in_one_unit - height/2;
 
 			this.aelement.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+    	}
+    }
+
+    class ImageElement extends Element{
+    	constructor(domelement){
+    		super(domelement);
+
+    		//Image asset creation
+    		this.asset = this.domelement.cloneNode(true);
+	        var asset_id = "img-asset-" + img_id++;
+	        this.asset.setAttribute("id",asset_id);
+
+    		this.aelement = document.createElement("a-image");
+    		this.aelement.setAttribute("src","#"+asset_id);
+
+    		this.update();
+    	}
+
+    	getAsset(){
+    		return this.asset;
+    	}
+
+    	update(){      
+    		var element_style = window.getComputedStyle(this.domelement);
+			var position = this.domelement.getBoundingClientRect();
+
+	        var img_width = this.domelement.clientWidth / pixels_in_one_unit;
+	        var img_height = this.domelement.clientHeight / pixels_in_one_unit;
+	        this.aelement.setAttribute("width",img_width);
+	        this.aelement.setAttribute("height",img_height);
+
+	        this.aelement.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index});
+    	}
+    }
+
+    function UpdateAll(){
+    	if(update_all){
+    		this.update();
+	    	for(var i = 0; i < a_elements.length; i++)
+	    		a_elements[i].update();
     	}
     }
 
@@ -177,33 +224,11 @@
 			element_style = window.getComputedStyle(element);
 			position = element.getBoundingClientRect();
 
+			var new_a_element = null;
+
 			if(element.tagName == "BODY" || element.tagName == "DIV" ){
-				/*var pane = document.createElement("a-plane");
-
-				width = (position.right - position.left)/pixels_in_one_unit;
-				height = (position.bottom - position.top)/pixels_in_one_unit;
-
-				if(element.tagName == "BODY")
-					body_width = width;
-
-				pane.setAttribute("width", width);
-				pane.setAttribute("height", height);
-				pane.setAttribute('color', element_style.getPropertyValue("background-color"));
-
-				y = -position.top/pixels_in_one_unit - height/2;
-
-				pane.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index + div_depth});
-				div_depth += 0.05;
-
-				if(div_depth > 0.9)
-					div_depth = 0.9;
-
-				a_scene.appendChild(pane);
-				aelement = pane;*/
-
-
-				containerelement = new ContainerElement(element,div_depth);
-	    		a_scene.appendChild(containerelement.getAElement());
+				new_a_element = new ContainerElement(element,div_depth);
+	    		a_scene.appendChild(new_a_element.getAElement());
 
 	    		div_depth += 0.05;
 
@@ -213,30 +238,19 @@
 
         	//Text based elements
 		    if(element.tagName == "P" || element.tagName.startsWith("H")){
-	    		textelement = new TextElement(element);
-	    		a_scene.appendChild(textelement.getAElement());
+	    		new_a_element = new TextElement(element);
+	    		a_scene.appendChild(new_a_element.getAElement());
 		    }
 
             //Images
             if(element.tagName == "IMG"){
-              var asset = element.cloneNode(true);
-              var asset_id = "img-asset-" + img_id++;
-
-              asset.setAttribute("id",asset_id);
-              a_assets.appendChild(asset);
-
-              var img = document.createElement("a-image");
-              img.setAttribute("src","#"+asset_id);
-
-              img_width = element.clientWidth / pixels_in_one_unit;
-              img_height = element.clientHeight / pixels_in_one_unit;
-              img.setAttribute("width",img_width);
-              img.setAttribute("height",img_height);
-
-              img.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index})
-
-              a_scene.appendChild(img);
+              new_a_element = new ImageElement(element);
+              a_scene.appendChild(new_a_element.getAElement());
+              a_assets.appendChild(new_a_element.getAsset());
             }
+
+            if(new_a_element != null)
+            	a_elements.push(new_a_element);
 
             //element.style.display="none";
 		}
