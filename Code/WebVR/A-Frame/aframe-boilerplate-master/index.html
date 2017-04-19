@@ -7,6 +7,20 @@
     <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
 
     <style type="text/css">
+
+        @keyframes example {
+            0%   {background-color: red;}
+            25%  {background-color: yellow;}
+            50%  {background-color: blue;}
+            100% {background-color: green;}
+        }
+
+        @keyframes textani {
+            0%   {font-size: 18px;}
+            50% {font-size: 50px;}
+            100%   {font-size: 18px;}
+        }
+
     	p{
     		color: red;
     	}
@@ -23,6 +37,7 @@
     		width: 300px;
     		margin: auto;
     		background-color: blue;
+            /*transition: width 2s;*/
     	}
 
     	a-text{
@@ -45,6 +60,7 @@
     <h2 class="float">Float</h2>
 
     <br>
+    <button onclick="update_all = !update_all;">Toggle Update All</button>
     <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
     <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
     <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';">Change Text</button>
@@ -52,7 +68,19 @@
     <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
     <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
     <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
-    <button onclick="update_all = !update_all;">Toggle Update All</button>
+
+    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 10';">Animate DIV CSS</button>
+    <script type="text/javascript">
+        document.getElementById('bluediv').addEventListener('webkitAnimationEnd', function(){
+            this.style.webkitAnimationName = '';
+        }, false);
+    </script>
+    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 10';">Animate DIV Text</button>
+    <script type="text/javascript">
+        document.getElementById('divtext').addEventListener('webkitAnimationEnd', function(){
+            this.style.webkitAnimationName = '';
+        }, false);
+    </script>
     <br>
     
     <script type="text/javascript">
@@ -63,11 +91,13 @@
     //Width of the body
     var body_width;
 
-    var update_all = false;
+    var update_all = true;
 
     var a_elements = new Array();
 
     var img_id = 0;
+
+    var animation_fps = 60;
 
     class Element{
     	constructor(domelement){
@@ -76,7 +106,27 @@
 
     		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
     		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
+
+            this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
+            this.domelement.addEventListener("animationstop", this.stopAnimation.bind(this));
+
+            this.domelement.addEventListener("transitionstart", this.startAnimation.bind(this));
+            this.domelement.addEventListener("transitionend", this.stopAnimation.bind(this));
     	}
+
+        startAnimation(){
+            this.stopAnimation();
+            this.interval = setInterval(this.updateAnimation.bind(this), 1000/animation_fps);
+        }
+
+        stopAnimation(){
+            clearInterval(this.interval);
+        }
+
+        updateAnimation(){
+            this.update();
+            UpdateAll.bind(this);
+        }
 
     	getAElement(){
     		return this.aelement;
@@ -99,7 +149,6 @@
     		var element_style = window.getComputedStyle(this.domelement);
 			var position = this.domelement.getBoundingClientRect();
 
-			
 			//Calc the y possition
             var y = -((position.bottom - position.top) / 2 + position.top);
             this.aelement.setAttribute("position",{x: position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
@@ -256,7 +305,7 @@
 
 				if(div_depth > 0.9)
 					div_depth = 0.9;
-			}	
+			}
 
         	//Text based elements
 		    if(element.tagName == "P" || element.tagName.startsWith("H")){
@@ -271,6 +320,7 @@
               a_assets.appendChild(new_a_element.getAsset());
             }
 
+            //Push the element in the array of all elements
             if(new_a_element != null)
             	a_elements.push(new_a_element);
 
