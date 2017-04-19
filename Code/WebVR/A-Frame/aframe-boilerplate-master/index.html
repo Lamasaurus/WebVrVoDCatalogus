@@ -37,7 +37,7 @@
     		width: 300px;
     		margin: auto;
     		background-color: blue;
-            transition: width 2s;
+            /*transition: width 2s;*/
     	}
 
     	a-text{
@@ -59,6 +59,10 @@
     <img src="owl.jpg">
     <h2 class="float">Float</h2>
 
+    <p id="none" style="display: none;">Disp none</p>
+    <p id="hidden" style="visibility: hidden;">Visibility hidden</p>
+    <p id="op" style="opacity: 0.5;">0.5 opacity</p>
+
     <br>
     <button onclick="update_all = !update_all;">Toggle Update All</button>
     <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
@@ -69,18 +73,22 @@
     <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
     <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
 
-    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 10';">Animate DIV CSS</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';">Animate DIV CSS</button>
     <script type="text/javascript">
-        document.getElementById('bluediv').addEventListener('webkitAnimationEnd', function(){
+        document.getElementById('bluediv').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
-    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 10';">Animate DIV Text</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';">Animate DIV Text</button>
     <script type="text/javascript">
-        document.getElementById('divtext').addEventListener('webkitAnimationEnd', function(){
+        document.getElementById('divtext').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
+
+    <button onclick="element = document.getElementById('none'); element.style.display = 'block';">Show disp</button>
+    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';">Visible</button>
+    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';">Opacity</button>
     <br>
     
     <script type="text/javascript">
@@ -97,35 +105,57 @@
 
     var img_id = 0;
 
-    var animation_fps = 60;
+    var animation_fps = 999
+
+    class Position{
+        constructor(){
+            this.top = 0;
+            this.bottom = 0;
+            this.left = 0;
+            this.right = 0;
+        }
+    }
 
     class Element{
     	constructor(domelement){
     		this.domelement = domelement;
     		this.aelement = null;
 
-    		(new MutationObserver(this.update.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
+            //Listenes for direct css changes
+    		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
     		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
 
+            //Listenes for css animations
             this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
-            this.domelement.addEventListener("animationstop", this.stopAnimation.bind(this));
+            this.domelement.addEventListener("animationend", this.stopAnimation.bind(this));
 
+            //Listenes for transition changes, only works on Microsoft Edge
             this.domelement.addEventListener("transitionstart", this.startAnimation.bind(this));
             this.domelement.addEventListener("transitionend", this.stopAnimation.bind(this));
+
+            this.position = new Position();
+
+            //Flag for when we need to redraw
+            this.dirty = false;
     	}
 
         startAnimation(){
-            this.stopAnimation();
+            this.stopIntervall();
             this.interval = setInterval(this.updateAnimation.bind(this), 1000/animation_fps);
         }
 
         stopAnimation(){
-            clearInterval(this.interval);
+            this.stopIntervall();
+            this.updateAnimation();
+        }
+
+        stopIntervall(){
+            clearInterval(this.interval);            
         }
 
         updateAnimation(){
             this.update();
-            UpdateAll.bind(this);
+            UpdateAll.bind(this).call();
         }
 
     	getAElement(){
@@ -135,6 +165,49 @@
     	getDomElement(){
     		return this.domelement;
     	}
+
+        updatePosition(position){
+            this.position.top = position.top;
+            this.position.bottom = position.bottom;
+            this.position.left = position.left;
+            this.position.right = position.right;
+        }
+
+        comparePosition(position){
+            return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
+        }
+
+        //Gets called on the object that invokes the whole update chain, which is garanteed to be dirty
+        updateDirt(){
+            this.dirty = true;
+            this.update();
+        }
+
+        update(){
+            //get new position and style
+            var position = this.domelement.getBoundingClientRect();
+            var element_style = window.getComputedStyle(this.domelement);
+
+            //Check if something changed since last time, else we just stop the update
+            if(this.comparePosition(position) && this.old_style === JSON.stringify(element_style) && !this.dirty)
+                return;
+
+            //Cash the last style and position
+            this.updatePosition(position);
+            this.old_style = JSON.stringify(element_style);
+
+            this.elementSpecificUpdate(element_style);
+
+            //Some standard CSS
+            this.aelement.setAttribute("opacity", -1);
+            if(element_style.getPropertyValue("visibility") === "hidden" || element_style.getPropertyValue("display") === "none"){
+                this.aelement.setAttribute("opacity", 0);
+            }
+            else
+                this.aelement.setAttribute("opacity", parseFloat(element_style.getPropertyValue("opacity")));
+
+            this.dirty = false;
+        }
     }
 
     class TextElement extends Element{
@@ -145,13 +218,10 @@
     		this.update();
     	}
 
-    	update(){
-    		var element_style = window.getComputedStyle(this.domelement);
-			var position = this.domelement.getBoundingClientRect();
-
+    	elementSpecificUpdate(element_style){
 			//Calc the y possition
-            var y = -((position.bottom - position.top) / 2 + position.top);
-            this.aelement.setAttribute("position",{x: position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
+            var y = -((this.position.bottom - this.position.top) / 2 + this.position.top);
+            this.aelement.setAttribute("position",{x: this.position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
 
             //Style attributes
             this.aelement.setAttribute("text","value: " + this.domelement.innerHTML + ";");
@@ -182,12 +252,9 @@
     		this.update();
     	}
 
-    	update(){
-    		var element_style = window.getComputedStyle(this.domelement);
-			var position = this.domelement.getBoundingClientRect();
-
-    		var width = (position.right - position.left)/pixels_in_one_unit;
-			var height = (position.bottom - position.top)/pixels_in_one_unit;
+    	elementSpecificUpdate(element_style){
+    		var width = (this.position.right - this.position.left)/pixels_in_one_unit;
+			var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
 
 			if(element.tagName == "BODY")
 				body_width = width;
@@ -196,9 +263,9 @@
 			this.aelement.setAttribute("height", height);
 			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
 
-			var y = -position.top/pixels_in_one_unit - height/2;
+			var y = -this.position.top/pixels_in_one_unit - height/2;
 
-			this.aelement.setAttribute('position', {x: position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+			this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
     	}
     }
 
@@ -221,21 +288,19 @@
     		return this.asset;
     	}
 
-    	update(){      
-    		var element_style = window.getComputedStyle(this.domelement);
-			var position = this.domelement.getBoundingClientRect();
-
+    	elementSpecificUpdate(element_style){
 	        var img_width = this.domelement.clientWidth / pixels_in_one_unit;
 	        var img_height = this.domelement.clientHeight / pixels_in_one_unit;
 	        this.aelement.setAttribute("width",img_width);
 	        this.aelement.setAttribute("height",img_height);
 
-	        this.aelement.setAttribute('position', {x: position.left/pixels_in_one_unit + img_width/2, y: -position.top/pixels_in_one_unit - img_height/2, z: z_index});
+	        this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + img_width/2, y: -this.position.top/pixels_in_one_unit - img_height/2, z: z_index});
     	}
     }
 
     var grabbing = false;
 
+    //Check if the event is triggered because of a grab
     function IsDragEvent(element){
     	if(element.tagName == "BODY" && element.classList.contains("a-grabbing") && !grabbing){
 			grabbing = true;
@@ -244,14 +309,15 @@
 			grabbing = false;
 			return true;
 		}
-
 		return false;
     }
 
     function UpdateAll(mutations){
-    	if(update_all){
-    		if(IsDragEvent(this.getDomElement()))
-    			return;
+        if(update_all){
+
+            //Stop everything from updating when dragging
+            if(IsDragEvent(this.getDomElement()))
+                return;
 
 	    	for(var i = 0; i < a_elements.length; i++)
 	    		a_elements[i].update();
@@ -291,10 +357,6 @@
 		for (i = 0; i < items.length; i++) {
 
 			element = items[i];
-			console.log(element);
-			element_style = window.getComputedStyle(element);
-			position = element.getBoundingClientRect();
-
 			var new_a_element = null;
 
 			if(element.tagName == "BODY" || element.tagName == "DIV" ){
@@ -355,27 +417,6 @@
 	    }
 
 	}
-
-    /*setTimeout(function(){
-    	elements = document.getElementsByTagName("a-text");
-    	for(i = 0; i < elements.length; i++){
-    		element = elements[i];
-
-    		pos = element.getAttribute("position");
-    		x = pos.x + 0;
-    		y = pos.y + 3;
-    		z = pos.z + 0;
-    		element.setAttribute("position", x+" "+y+" "+z);
-    	}
-    },3000);*/
-
-    /*setTimeout(function(){
-    	elements = document.getElementsByTagName("a-text");
-    	for(i = 0; i < elements.length; i++){
-    		element = elements[i];
-    		element.setAttribute("width", 20);
-    	}
-    },3000);*/
 
     </script>
   </body>
