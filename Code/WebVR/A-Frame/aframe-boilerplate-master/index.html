@@ -56,445 +56,62 @@
     	<p id="divtext">A p in a div</p>
     </div>
 
-<!--
     <img src="owl.jpg">
--->
+
     <h2 class="float">Float</h2>
 
     <p id="none" style="display: none;">Disp none</p>
     <p id="hidden" style="visibility: hidden;">Visibility hidden</p>
     <p id="op" style="opacity: 0.5;">0.5 opacity</p>
 
-    <br>
-    <button onclick="update_all = !update_all;" keepinvr>Toggle Update All</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';" keepinvr>Possition</button>
-    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';" keepinvr>Text color</button>
-    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';" keepinvr>Change Text</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';" keepinvr>Background color</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';" keepinvr>DIV Size</button>
-    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';" keepinvr>Text Size</button>
-    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';" keepinvr>Div Text Size</button>
+    <a-box color="red" depth="2" height="4" width="0.5"></a-box>
 
-    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';" keepinvr>Animate DIV CSS</button>
+    <br>
+    <button onclick="update_all = !update_all;">Toggle Update All</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
+    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';">Change Text</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
+
+    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';">Animate DIV CSS</button>
     <script type="text/javascript">
         document.getElementById('bluediv').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
-    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';" keepinvr>Animate DIV Text</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';">Animate DIV Text</button>
     <script type="text/javascript">
         document.getElementById('divtext').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
 
-    <button onclick="element = document.getElementById('none'); element.style.display = 'block';" keepinvr>Show disp</button>
-    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';" keepinvr>Visible</button>
-    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';" keepinvr>Opacity</button>
+    <script type="text/javascript">
+        function myMove() {
+            var elem = document.getElementById("bluediv"); 
+            var width = elem.offsetWidth;
+            var id = setInterval(frame, 5);
+            function frame() {
+                if (width == 100) {
+                    clearInterval(id);
+                } else {
+                    width--; 
+                    elem.style.width = width + 'px'; 
+                }
+            }
+        }
+    </script>
+    <button onclick="myMove();">Animate DIV Javascript</button>
+
+    <button onclick="element = document.getElementById('none'); element.style.display = 'block';">Show disp</button>
+    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';">Visible</button>
+    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';">Opacity</button>
     <br>
     
-    <script type="text/javascript">
-
-    var pixels_in_one_unit,pixel_text_size;
-    //Standard z index
-    var z_index = -40;
-    //Width of the body
-    var body_width;
-
-    var update_all = true;
-
-    var a_elements = new Array();
-
-    var img_id = 0;
-
-    var animation_fps = 999
-
-    class Position{
-        constructor(){
-            this.top = 0;
-            this.bottom = 0;
-            this.left = 0;
-            this.right = 0;
-        }
-    }
-
-    class Element{
-    	constructor(domelement){
-    		this.domelement = domelement;
-    		this.aelement = null;
-
-            //Listenes for direct css changes
-    		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
-    		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
-
-            //Listenes for css animations
-            this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
-            this.domelement.addEventListener("animationend", this.stopAnimation.bind(this));
-
-            //Listenes for transition changes, only works on Microsoft Edge
-            this.domelement.addEventListener("transitionstart", this.startAnimation.bind(this));
-            this.domelement.addEventListener("transitionend", this.stopAnimation.bind(this));
-
-            this.position = new Position();
-
-            //Flag for when we need to redraw
-            this.dirty = false;
-    	}
-
-        startAnimation(){
-            this.stopIntervall();
-            this.interval = setInterval(this.updateAnimation.bind(this), 1000/animation_fps);
-        }
-
-        stopAnimation(){
-            this.stopIntervall();
-            this.updateAnimation();
-        }
-
-        stopIntervall(){
-            clearInterval(this.interval);            
-        }
-
-        updateAnimation(){
-            this.update();
-            UpdateAll.bind(this).call();
-        }
-
-    	getAElement(){
-    		return this.aelement;
-    	}
-
-    	getDomElement(){
-    		return this.domelement;
-    	}
-
-        updatePosition(position){
-            this.position.top = position.top;
-            this.position.bottom = position.bottom;
-            this.position.left = position.left;
-            this.position.right = position.right;
-        }
-
-        comparePosition(position){
-            return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
-        }
-
-        //Gets called on the object that invokes the whole update chain, which is garanteed to be dirty
-        updateDirt(){
-            this.dirty = true;
-            this.update();
-        }
-
-        update(){
-            //get new position and style
-            var position = this.domelement.getBoundingClientRect();
-            var element_style = window.getComputedStyle(this.domelement);
-
-            //Check if something changed since last time, else we just stop the update
-            if(this.comparePosition(position) && this.old_style === JSON.stringify(element_style) && !this.dirty)
-                return;
-
-            //Cash the last style and position
-            this.updatePosition(position);
-            this.old_style = JSON.stringify(element_style);
-
-            this.elementSpecificUpdate(element_style);
-
-            //Some standard CSS
-            this.aelement.setAttribute("opacity", -1);
-            if(element_style.getPropertyValue("visibility") === "hidden" || element_style.getPropertyValue("display") === "none"){
-                this.aelement.setAttribute("opacity", 0);
-            }
-            else
-                this.aelement.setAttribute("opacity", parseFloat(element_style.getPropertyValue("opacity")));
-
-            this.dirty = false;
-        }
-    }
-
-    class TextElement extends Element{
-    	constructor(domelement){
-    		super(domelement);
-
-    		this.aelement = document.createElement("a-text");
-    		this.update();
-    	}
-
-    	elementSpecificUpdate(element_style){
-			//Calc the y possition
-            var y = -((this.position.bottom - this.position.top) / 2 + this.position.top);
-            this.aelement.setAttribute("position",{x: this.position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
-
-            //Style attributes
-            this.aelement.setAttribute("text","value: " + this.domelement.innerHTML + ";");
-
-            //First reset the color of the text to black and then to the color the text really has to be
-            this.aelement.setAttribute('color', "rgb(0,0,0)");
-    		this.aelement.setAttribute('color', ""+element_style.getPropertyValue("color"));
-            //par.setAttribute("font","Times New Toman")//element_style.getPropertyValue("font"));
-
-			//Set width first to 0, else it will get set to 0 after the new width is set
-            this.aelement.setAttribute("width",0);
-            var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
-            this.aelement.setAttribute("width",scale * 20);
-
-            //First reset the anchor to nothing and then back to left
-			this.aelement.setAttribute("anchor","");
-			this.aelement.setAttribute("anchor","left");
-    	}
-    }
-
-    class ContainerElement extends Element{
-    	constructor(domelement, depth){
-    		super(domelement);
-
-    		this.div_depth = depth;
-
-    		this.aelement = document.createElement("a-plane");
-    		this.update();
-    	}
-
-    	elementSpecificUpdate(element_style){
-    		var width = (this.position.right - this.position.left)/pixels_in_one_unit;
-			var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
-
-			if(element.tagName == "BODY")
-				body_width = width;
-
-			this.aelement.setAttribute("width", width);
-			this.aelement.setAttribute("height", height);
-			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
-
-			var y = -this.position.top/pixels_in_one_unit - height/2;
-
-			this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
-    	}
-    }
-
-    class ImageElement extends Element{
-    	constructor(domelement){
-    		super(domelement);
-
-    		//Image asset creation
-    		this.asset = this.domelement.cloneNode(true);
-	        var asset_id = "img-asset-" + img_id++;
-	        this.asset.setAttribute("id",asset_id);
-
-    		this.aelement = document.createElement("a-image");
-    		this.aelement.setAttribute("src","#"+asset_id);
-
-    		//Initiation update
-    		this.update();
-    	}
-
-    	getAsset(){
-    		return this.asset;
-    	}
-
-    	elementSpecificUpdate(element_style){
-	        var width = (this.position.right - this.position.left)/pixels_in_one_unit;
-			var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
-
-			this.aelement.setAttribute("width", width);
-			this.aelement.setAttribute("height", height);
-			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
-
-			this.aelement.setAttribute("text", "hallo");
-
-			var y = -this.position.top/pixels_in_one_unit - height/2;
-
-			this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
-    	}
-    }
-
-    class ButtonElement extends Element{
-    	constructor(domelement){
-    		super(domelement);
-
-    		this.aelement = document.createElement("a-entity");
-
-    		//Make separate container and text element
-    		this.aplane = new ContainerElement(domelement, z_index);
-    		this.atext = new TextElement(domelement);
-
-    		//Add container and text to this entity
-    		this.aelement.appendChild(this.aplane.getAElement());
-    		this.aelement.appendChild(this.atext.getAElement());
-
-    		//Make shure these are clickable by the raycaster
-    		this.aelement.classList.add('clickable');
-
-    		this.aelement.setAttribute("onclick", this.domelement.getAttribute("onclick"));
-    		this.aplane.getAElement().setAttribute("onclick", this.domelement.getAttribute("onclick"));
-    		this.atext.getAElement().setAttribute("onclick", this.domelement.getAttribute("onclick"));
-    		this.update();
-    	}
-
-    	clickElement(){
-    		this.domelement.click();
-    	}
-
-    	elementSpecificUpdate(element_style){
-    		this.aplane.update();
-    		this.atext.update();
-    	}
-    }
-
-    var grabbing = false;
-
-    //Check if the event is triggered because of a grab
-    function IsDragEvent(element){
-    	if(element.tagName == "BODY" && element.classList.contains("a-grabbing") && !grabbing){
-			grabbing = true;
-			return true;
-		}else if(element.tagName == "BODY" && !element.classList.contains("a-grabbing") && grabbing){
-			grabbing = false;
-			return true;
-		}
-		return false;
-    }
-
-    function UpdateAll(mutations){
-        if(update_all){
-
-            //Stop everything from updating when dragging
-            if(IsDragEvent(this.getDomElement()))
-                return;
-
-	    	for(var i = 0; i < a_elements.length; i++)
-	    		a_elements[i].update();
-    	}
-    }
-
-    window.onload = function(){
-    	items = new Array(document.body);
-    	var doc_items = document.body.getElementsByTagName("*");
-
-    	for(var i = 0; i < doc_items.length; i++)
-    		items.push(doc_items[i]);
-
-
-    	var a_scene = document.createElement("a-scene");
-    	a_scene.setAttribute("style","position:absolute; top:0;")
-
-        //Sky
-        var a_sky = document.createElement("a-sky");
-        a_sky.setAttribute("color", "#DDDDDD");
-        a_scene.appendChild(a_sky);
-
-        //Assets
-        var a_assets = document.createElement("a-assets");
-        a_scene.appendChild(a_assets);
-
-        var img_id = 0;
-        var div_depth = -0.2;
-
-        //Calc the ammount of pixels in 1 meter
-		var standard_p = document.createElement("p");
-		standard_p.setAttribute("style", "font-size:1em;")
-        document.body.appendChild(standard_p);
-        pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
-        pixel_text_size = 1/pixels_in_one_unit;
-        document.body.removeChild(standard_p);
-
-		for (i = 0; i < items.length; i++) {
-
-			element = items[i];
-			var new_a_element = null;
-
-			if(element.tagName == "BODY" || element.tagName == "DIV" ){
-				new_a_element = new ContainerElement(element,div_depth);
-	    		a_scene.appendChild(new_a_element.getAElement());
-
-	    		div_depth += 0.05;
-
-				if(div_depth > 0.9)
-					div_depth = 0.9;
-			}
-
-        	//Text based elements
-		    if(element.tagName == "P" || element.tagName.startsWith("H")){
-	    		new_a_element = new TextElement(element);
-	    		a_scene.appendChild(new_a_element.getAElement());
-		    }
-
-            //Images
-            if(element.tagName == "IMG"){
-              new_a_element = new ImageElement(element);
-              a_scene.appendChild(new_a_element.getAElement());
-              a_assets.appendChild(new_a_element.getAsset());
-            }
-
-            if(element.tagName == "BUTTON"){
-            	new_a_element = new ButtonElement(element);
-            	a_scene.appendChild(new_a_element.getAElement());
-            }
-
-            //Push the element in the array of all elements
-            if(new_a_element != null)
-            	a_elements.push(new_a_element);
-
-            /*if(!element.getAttribute("keepinvr"))
-            	element.style.display="none";*/
-		}
-
-		//Camera
-		camera_entity = document.createElement("a-entity");
-		camera_entity.setAttribute("position", body_width/2 + " 0 0");
-		camera = document.createElement("a-camera");
-		camera.setAttribute("position", "0 0 0");
-		camera_entity.appendChild(camera);
-
-		//Cursor
-		cursor = document.createElement("a-cursor");
-		/*cursor.setAttribute("fuse",true);
-		cursor.setAttribute("fuse-timeout",1000);*/
-		cursor.setAttribute("raycaster","objects: .clickable")
-		camera.appendChild(cursor);
-
-		//Cursor animations
-		animation1 = document.createElement("a-animation");
-		animation1.setAttribute("begin","click");
-		animation1.setAttribute("easing", "ease-in");
-		animation1.setAttribute("attribute", "scale");
-		animation1.setAttribute("fill", "backwards");
-		animation1.setAttribute("from", "0.1 0.1 0.1");
-		animation1.setAttribute("to", "1 1 1");
-		cursor.appendChild(animation1);
-
-		animation2 = document.createElement("a-animation");
-		animation2.setAttribute("begin","cursor-fusing");
-		animation2.setAttribute("easing", "ease-in");
-		animation2.setAttribute("attribute", "scale");
-		animation2.setAttribute("fill", "forwards");
-		animation2.setAttribute("from", "1 1 1");
-		animation2.setAttribute("to", "0.1 0.1 0.1");
-		cursor.appendChild(animation2);
-
-
-		a_scene.appendChild(camera_entity);
-
-    	document.body.appendChild(a_scene);
-    };
-
-    document.onkeydown = checkKey;
-
-	function checkKey(e) {
-
-	    e = e || window.event;
-
-	    if (e.keyCode == '65') {
-	    	var pos = camera.getAttribute("position");
-	        camera.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
-	    }
-	    else if (e.keyCode == '69') {
-	        var pos = camera.getAttribute("position");
-	        camera.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
-	    }
-
-	}
-
-    </script>
+    <script src="dom2aframe.js"></script>
   </body>
 
 </html>
