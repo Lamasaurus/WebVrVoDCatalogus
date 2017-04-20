@@ -56,7 +56,9 @@
     	<p id="divtext">A p in a div</p>
     </div>
 
+<!--
     <img src="owl.jpg">
+-->
     <h2 class="float">Float</h2>
 
     <p id="none" style="display: none;">Disp none</p>
@@ -64,31 +66,31 @@
     <p id="op" style="opacity: 0.5;">0.5 opacity</p>
 
     <br>
-    <button onclick="update_all = !update_all;">Toggle Update All</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
-    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
-    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';">Change Text</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
-    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
-    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
-    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
+    <button onclick="update_all = !update_all;" keepinvr>Toggle Update All</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';" keepinvr>Possition</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';" keepinvr>Text color</button>
+    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';" keepinvr>Change Text</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';" keepinvr>Background color</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';" keepinvr>DIV Size</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';" keepinvr>Text Size</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';" keepinvr>Div Text Size</button>
 
-    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';">Animate DIV CSS</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';" keepinvr>Animate DIV CSS</button>
     <script type="text/javascript">
         document.getElementById('bluediv').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
-    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';">Animate DIV Text</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';" keepinvr>Animate DIV Text</button>
     <script type="text/javascript">
         document.getElementById('divtext').addEventListener('animationend', function(){
             this.style.webkitAnimationName = '';
         }, false);
     </script>
 
-    <button onclick="element = document.getElementById('none'); element.style.display = 'block';">Show disp</button>
-    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';">Visible</button>
-    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';">Opacity</button>
+    <button onclick="element = document.getElementById('none'); element.style.display = 'block';" keepinvr>Show disp</button>
+    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';" keepinvr>Visible</button>
+    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';" keepinvr>Opacity</button>
     <br>
     
     <script type="text/javascript">
@@ -281,6 +283,7 @@
     		this.aelement = document.createElement("a-image");
     		this.aelement.setAttribute("src","#"+asset_id);
 
+    		//Initiation update
     		this.update();
     	}
 
@@ -289,12 +292,51 @@
     	}
 
     	elementSpecificUpdate(element_style){
-	        var img_width = this.domelement.clientWidth / pixels_in_one_unit;
-	        var img_height = this.domelement.clientHeight / pixels_in_one_unit;
-	        this.aelement.setAttribute("width",img_width);
-	        this.aelement.setAttribute("height",img_height);
+	        var width = (this.position.right - this.position.left)/pixels_in_one_unit;
+			var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
 
-	        this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + img_width/2, y: -this.position.top/pixels_in_one_unit - img_height/2, z: z_index});
+			this.aelement.setAttribute("width", width);
+			this.aelement.setAttribute("height", height);
+			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
+
+			this.aelement.setAttribute("text", "hallo");
+
+			var y = -this.position.top/pixels_in_one_unit - height/2;
+
+			this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+    	}
+    }
+
+    class ButtonElement extends Element{
+    	constructor(domelement){
+    		super(domelement);
+
+    		this.aelement = document.createElement("a-entity");
+
+    		//Make separate container and text element
+    		this.aplane = new ContainerElement(domelement, z_index);
+    		this.atext = new TextElement(domelement);
+
+    		//Add container and text to this entity
+    		this.aelement.appendChild(this.aplane.getAElement());
+    		this.aelement.appendChild(this.atext.getAElement());
+
+    		//Make shure these are clickable by the raycaster
+    		this.aelement.classList.add('clickable');
+
+    		this.aelement.setAttribute("onclick", this.domelement.getAttribute("onclick"));
+    		this.aplane.getAElement().setAttribute("onclick", this.domelement.getAttribute("onclick"));
+    		this.atext.getAElement().setAttribute("onclick", this.domelement.getAttribute("onclick"));
+    		this.update();
+    	}
+
+    	clickElement(){
+    		this.domelement.click();
+    	}
+
+    	elementSpecificUpdate(element_style){
+    		this.aplane.update();
+    		this.atext.update();
     	}
     }
 
@@ -333,6 +375,7 @@
 
 
     	var a_scene = document.createElement("a-scene");
+    	a_scene.setAttribute("style","position:absolute; top:0;")
 
         //Sky
         var a_sky = document.createElement("a-sky");
@@ -382,11 +425,17 @@
               a_assets.appendChild(new_a_element.getAsset());
             }
 
+            if(element.tagName == "BUTTON"){
+            	new_a_element = new ButtonElement(element);
+            	a_scene.appendChild(new_a_element.getAElement());
+            }
+
             //Push the element in the array of all elements
             if(new_a_element != null)
             	a_elements.push(new_a_element);
 
-            //element.style.display="none";
+            /*if(!element.getAttribute("keepinvr"))
+            	element.style.display="none";*/
 		}
 
 		//Camera
@@ -395,6 +444,33 @@
 		camera = document.createElement("a-camera");
 		camera.setAttribute("position", "0 0 0");
 		camera_entity.appendChild(camera);
+
+		//Cursor
+		cursor = document.createElement("a-cursor");
+		/*cursor.setAttribute("fuse",true);
+		cursor.setAttribute("fuse-timeout",1000);*/
+		cursor.setAttribute("raycaster","objects: .clickable")
+		camera.appendChild(cursor);
+
+		//Cursor animations
+		animation1 = document.createElement("a-animation");
+		animation1.setAttribute("begin","click");
+		animation1.setAttribute("easing", "ease-in");
+		animation1.setAttribute("attribute", "scale");
+		animation1.setAttribute("fill", "backwards");
+		animation1.setAttribute("from", "0.1 0.1 0.1");
+		animation1.setAttribute("to", "1 1 1");
+		cursor.appendChild(animation1);
+
+		animation2 = document.createElement("a-animation");
+		animation2.setAttribute("begin","cursor-fusing");
+		animation2.setAttribute("easing", "ease-in");
+		animation2.setAttribute("attribute", "scale");
+		animation2.setAttribute("fill", "forwards");
+		animation2.setAttribute("from", "1 1 1");
+		animation2.setAttribute("to", "0.1 0.1 0.1");
+		cursor.appendChild(animation2);
+
 
 		a_scene.appendChild(camera_entity);
 
