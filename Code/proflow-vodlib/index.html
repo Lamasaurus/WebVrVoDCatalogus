@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="robots" content="noindex, nofollow, notranslate, noimageindex">
+	<title>ProFlow VodLib</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<link href="icon/favicon.ico" rel="shortcut icon" type="image/x-icon">
+	<link href="css/main.css" media="screen" rel="stylesheet" type="text/css">
+	<link href="css/custom.css" media="screen" rel="stylesheet" type="text/css">
+</head>
+<body class="tvTheek">
+	<div id="page">
+
+		<header>
+			<div class="wrap">
+				<section class="siteLabel">
+					<h1><span class="logo"><a href="https://www.iminds.be/en/projects/PRO-FLOW"><img alt="PRO-FLOW" src="icon/PRO-FLOW-logo-in-ellipse.svg"></a></span></h1>
+				</section>
+				<nav class="main">
+					<ul>
+						<li><a href="#" class="page">TV-KIJKEN</a></li>
+						<li><a href="#" class="page">OPNAMES</a></li>
+						<li><a href="#" class="page">TV-GIDS</a></li>
+						<li class="active"><a href="#" class="page">TV-THEEK</a></li>
+						<li><a href="#" class="page">INSTELLINGEN</a></li>
+					</ul>
+				</nav>
+			</div>
+
+			<nav class="sub">
+				<ul>
+					<li><a href="#" class="page">In de Kijker</a></li>
+					<li class="active"><a href="#" class="page">Films</a></li>
+					<li><a href="#" class="page">Series</a></li>
+					<li><a href="#" class="page">Kids</a></li>
+					<li><a href="#" class="page">Sport</a></li>
+					<li><a href="#" class="page passion">Passion</a></li>
+				</ul>
+			</nav>
+
+			<section class="search">
+				<form id="searchForm" action="/tv-theek/zoek/" method="get">
+					<div class="inputWrap"><label for="searchField">Search</label><input name="q" class="textfield" id="searchField" autocomplete="off" placeholder="Zoeken"
+						 type="text">
+						<div class="lnkClear" style="display: none;"><a href="#">Annuleren</a></div>
+						<div style="display: none;" class="lnkClear"><a href="#">clear</a></div>
+					</div>
+					<div class="submitWrap"><input class="submit" value="search" id="searchSubmit" type="submit"></div>
+				</form>
+			</section>
+
+			<section class="filters">
+				<header>
+					<h1><span>Toon: <span class="value">Filter</span></span>
+					</h1>
+				</header>
+				<div class="main">
+					<section class="formBox">
+						<form id="filterForm" method="get" action="/tv-theek/">
+							<div class="main">
+								<div class="formRow clearfix genre">
+									<div class="inputElement radio">
+										<div class="label">KIES GENRE</div>
+										<div class="value">
+											<div class="control checked"><label class="label" for="inpFilterGenre-1">Filter</label><input id="inpFilterGenre-all" name="inpFilterGenre"
+												 data-url="/tv-theek/films" data-name="categoryid" data-value="20665047751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/films_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166444751">Blockbuster</label><input id="inpFilterGenre-21166444751"
+												 name="inpFilterGenre" data-url="/tv-theek/films/blockbuster" data-name="categoryid" data-value="21166444751"
+												 type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/blockbusters_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-20665051751">Actie</label><input id="inpFilterGenre-20665051751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/actie" data-name="categoryid" data-value="20665051751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/actie_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166445751">Animatie</label><input id="inpFilterGenre-21166445751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/animatie" data-name="categoryid" data-value="21166445751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/animatie_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166786751">Avontuur</label><input id="inpFilterGenre-21166786751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/avontuur" data-name="categoryid" data-value="21166786751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/avontuur_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166787751">Docu</label><input id="inpFilterGenre-21166787751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/docu" data-name="categoryid" data-value="21166787751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/documentaires_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166783751">Drama</label><input id="inpFilterGenre-21166783751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/drama" data-name="categoryid" data-value="21166783751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/drama_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+											<div class="control"><label class="label" for="inpFilterGenre-21166450751">Familie</label><input id="inpFilterGenre-21166450751" name="inpFilterGenre"
+												 data-url="/tv-theek/films/familie" data-name="categoryid" data-value="21166450751" type="radio">
+												<div class="image">
+													<div class="graphic"><img src="icon/fam-kids_nl_combo_PC.png" alt="genre name"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="formRow clearfix sort">
+									<div class="inputElement radio">
+										<div class="label">Sorteer</div>
+										<div class="value">
+											<div class="control"><label class="label" for="inpFilterSort-popularity">Populair</label><input id="inpFilterSort-popularity" name="inpFilterSort"
+												 data-url="sort/popularity" data-name="sort" data-value="popularity" type="radio"></div>
+											<div class="control"><label class="label" for="inpFilterSort-az">A-Z</label><input id="inpFilterSort-az" name="inpFilterSort" data-url="sort/az"
+												 data-name="sort" data-value="az" type="radio"></div>
+											<div class="control checked"><label class="label" for="inpFilterSort-date">Nieuw</label><input id="inpFilterSort-date" name="inpFilterSort"
+												 data-url="sort/date" data-name="sort" data-value="date" type="radio"></div>
+										</div>
+									</div>
+								</div>
+								<fieldset>
+									<legend><span class="legend">Filter</span></legend>
+									<div class="fsContent">
+										<div class="formRow clearfix">
+											<div class="inputElement radio toggle">
+												<div class="label">In mijn pakket</div>
+												<div class="value">
+													<div class="control checked"><label class="label" for="inpFilterEntitlement-off">Off</label><input id="inpFilterEntitlement-off" name="inpFilterEntitlement"
+														 data-url="entitlementonly/off" data-name="entitlementonly" data-value="off" type="radio"></div>
+													<div class="control"><label class="label" for="inpFilterEntitlement-on">On</label><input id="inpFilterEntitlement-on" name="inpFilterEntitlement"
+														 data-url="entitlementonly/on" data-name="entitlementonly" data-value="on" type="radio"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+							<footer>
+								<div class="frmActions">
+									<div class="advance"><input class="submit" id="filterSubmit" name="filterSubmit" value="generic action" type="submit"></div>
+								</div>
+							</footer>
+						</form>
+					</section>
+				</div>
+			</section>
+
+		</header>
+
+		<div class="main" id="carouselContainer">
+			<div id="overlays">
+				<div id="overlayBG" onclick="closeVodPopup();"></div>
+				<section style="margin-top: 150px;transform:scale(1.3);" id="ovrVOD" class="overlay"></section>
+				<div id="videoPlayerContainer">
+					<video id="videoPlayer" controls></video>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	<script src="js/proflow.js"></script>
+	<script src="js/dash.all.min.js"></script>
+	<script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
+	<script src="js/dom2aframe.js"></script>
+</body>
+</html>

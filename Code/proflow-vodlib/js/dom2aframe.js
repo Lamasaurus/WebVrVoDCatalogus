@@ -35,7 +35,7 @@ class Element{
 		this.aelement = null;
 
         //Listenes for direct css changes
-		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
+		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
 		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
 
         //Listenes for css animations
@@ -450,4 +450,3 @@ function load(){
 }
 
 document.addEventListener("page_fully_loaded", load); 
-document.dispatchEvent(page_fully_loaded_event);
