@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hello, World! - A-Frame</title>
+    <meta name="description" content="Hello, World! - A-Frame">
+    <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
+
+    <style type="text/css">
+
+        @keyframes example {
+            0%   {background-color: red;}
+            25%  {background-color: yellow;}
+            50%  {background-color: blue;}
+            100% {background-color: green;}
+        }
+
+        @keyframes textani {
+            0%   {font-size: 18px;}
+            50% {font-size: 50px;}
+            100%   {font-size: 18px;}
+        }
+
+    	p{
+    		color: red;
+    	}
+
+    	body{
+    		background-color: white;
+    	}
+
+    	.float{
+    		float: right;
+    	}
+
+    	.bluediv{
+    		width: 300px;
+    		margin: auto;
+    		background-color: blue;
+            /*transition: width 2s;*/
+    	}
+
+    	a-text{
+    		background-color: red;
+    	}
+    </style>
+
+  </head>
+  <body>
+    <h1>Title 1</h1>
+    <h3>Title 3</h3>
+    <p id="sometext">Text</p>
+
+    <div id="bluediv" class="bluediv">
+    	<h2>A DIV</h2>
+    	<p id="divtext">A p in a div</p>
+    </div>
+
+    <!--<img src="owl.jpg">-->
+
+    <h2 class="float">Float</h2>
+
+    <div>
+    <p id="none" style="display: none;">Disp none</p>
+    <p id="hidden" style="visibility: hidden;">Visibility hidden</p>
+    <p id="op" style="opacity: 0.5;">0.5 opacity</p>
+    </div>
+
+    <br>
+    <button onclick="update_all = !update_all;">Toggle Update All</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.float = 'left';">Possition</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.color = 'blue';">Text color</button>
+    <button onclick="element = document.getElementById('sometext'); element.innerHTML = 'whut?';">Change Text</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.backgroundColor = 'green';">Background color</button>
+    <button onclick="element = document.getElementById('bluediv'); element.style.width = '500px';">DIV Size</button>
+    <button onclick="element = document.getElementById('sometext'); element.style.fontSize = '50px';">Text Size</button>
+    <button onclick="element = document.getElementById('divtext'); element.style.fontSize = '50px';">Div Text Size</button>
+
+    <button onclick="element = document.getElementById('bluediv'); element.style.animation = 'example 2s 3';">Animate DIV CSS</button>
+    <script type="text/javascript">
+        document.getElementById('bluediv').addEventListener('animationend', function(){
+            this.style.webkitAnimationName = '';
+        }, false);
+    </script>
+    <button onclick="element = document.getElementById('divtext'); element.style.animation = 'textani 2s 3';">Animate DIV Text</button>
+    <script type="text/javascript">
+        document.getElementById('divtext').addEventListener('animationend', function(){
+            this.style.webkitAnimationName = '';
+        }, false);
+    </script>
+
+    <script type="text/javascript">
+        function myMove() {
+            var elem = document.getElementById("bluediv"); 
+            var width = elem.offsetWidth;
+            var id = setInterval(frame, 5);
+            function frame() {
+                if (width == 100) {
+                    clearInterval(id);
+                } else {
+                    width--; 
+                    elem.style.width = width + 'px'; 
+                }
+            }
+        }
+    </script>
+    <button onclick="myMove();">Animate DIV Javascript</button>
+
+    <button onclick="element = document.getElementById('none'); element.style.display = 'block';">Show disp</button>
+    <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';">Visible</button>
+    <button onclick="element = document.getElementById('op'); element.style.opacity = '1';">Opacity</button>
+    <br>
+    
+    <script src="dom2aframe.js"></script>
+  </body>
+
+</html>

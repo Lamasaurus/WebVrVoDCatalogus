@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hello, World! - A-Frame</title>
+    <meta name="description" content="Hello, World! - A-Frame">
+    <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
+    <script src="https://rawgit.com/oscarmarinmiro/aframe-video-controls/master/dist/aframe-video-controls.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-assets>
+        <video id="iwb" autoplay loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>
+      </a-assets>
+
+      <a-camera position="0 0 0">
+          <a-cursor id="cursor" color="blue"></a-cursor>
+      </a-camera>
+
+      <a-video id="flatvid" src="#iwb" width="16" height="9" position="0 0 -10"></a-video>
+      <a-videosphere id="sphericalvid" src="#iwb" visible="false" rotation="0 180 0"></a-videosphere>
+
+      <a-entity video-controls="src:#iwb"></a-entity>
+      <a-sky id="sky" color="#ECECEC"></a-sky>
+    </a-scene>
+
+    <script type="text/javascript">
+      document.onkeydown = checkKey;
+      var flat = document.getElementById("flatvid");
+      var spherical = document.getElementById("sphericalvid");
+      var sky = document.getElementById("sky");
+
+      function checkKey(e) {
+
+          e = e || window.event;
+
+          if (e.keyCode == '84') {
+            console.log("View switch");
+            flat.setAttribute("visible", spherical.getAttribute("visible"));
+            sky.setAttribute("visible", flat.getAttribute("visible"))
+            spherical.setAttribute("visible", !flat.getAttribute("visible"));
+          }
+
+      }
+    </script>
+  </body>
+</html>
