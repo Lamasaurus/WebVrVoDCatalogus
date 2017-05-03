@@ -6,14 +6,16 @@
     <meta name="description" content="Hello, World! - A-Frame">
     <script src="https://aframe.io/releases/0.5.0/aframe.min.js"></script>
     <script src="https://rawgit.com/oscarmarinmiro/aframe-video-controls/master/dist/aframe-video-controls.min.js"></script>
+    <script src="https://rawgit.com/oscarmarinmiro/aframe-stereo-component/master/dist/aframe-stereo-component.min.js"></script>
   </head>
   <body>
     <a-scene>
       <a-assets>
         <video id="iwb" autoplay loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>
+        <video id="Mary" src="MaryOculus.mp4" loop></video>
       </a-assets>
 
-      <a-camera position="0 0 0">
+      <a-camera position="0 0 0" stereocam="eye:left;">
           <a-cursor id="cursor" color="blue"></a-cursor>
       </a-camera>
 
@@ -21,24 +23,61 @@
       <a-videosphere id="sphericalvid" src="#iwb" visible="false" rotation="0 180 0"></a-videosphere>
 
       <a-entity video-controls="src:#iwb"></a-entity>
-      <a-sky id="sky" color="#ECECEC"></a-sky>
+
+
+      <a-entity id="lefteye" geometry="primitive: sphere;
+                      radius: 100;
+                      segmentsWidth: 64;
+                      segmentsHeight: 64;"
+              material="shader: flat; src: #iwb;"
+              scale="-1 1 1" stereo="eye:left" visible="false">
+      </a-entity>
+
+      <!-- native sphere, will render on 'right' eye, and will take only the second half of the video for projection -->
+
+      <a-entity id="righteye" geometry="primitive: sphere;
+                      radius: 100;
+                      segmentsWidth: 64;
+                      segmentsHeight: 64;"
+              material="shader: flat; src: #iwb;"
+              scale="-1 1 1" stereo="eye:right" visible="false">
+      </a-entity>
+
     </a-scene>
 
     <script type="text/javascript">
       document.onkeydown = checkKey;
       var flat = document.getElementById("flatvid");
       var spherical = document.getElementById("sphericalvid");
-      var sky = document.getElementById("sky");
+      var left = document.getElementById("lefteye");
+      var right = document.getElementById("righteye");
+
+      var mode = 0;
 
       function checkKey(e) {
 
           e = e || window.event;
 
           if (e.keyCode == '84') {
-            console.log("View switch");
-            flat.setAttribute("visible", spherical.getAttribute("visible"));
-            sky.setAttribute("visible", flat.getAttribute("visible"))
-            spherical.setAttribute("visible", !flat.getAttribute("visible"));
+            mode = (mode + 1)%3;
+
+            if(mode == 0)
+              flat.setAttribute("visible", true);
+            else
+              flat.setAttribute("visible", false);
+
+            if(mode == 1)
+              spherical.setAttribute("visible", true);
+            else
+              spherical.setAttribute("visible", false);
+
+            if(mode == 2){
+              left.setAttribute("visible", true);
+              right.setAttribute("visible", true);
+            }else{
+              left.setAttribute("visible", false);
+              right.setAttribute("visible", false);
+            }
           }
 
       }
