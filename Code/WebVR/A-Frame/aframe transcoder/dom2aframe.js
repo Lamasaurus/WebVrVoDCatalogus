@@ -20,6 +20,9 @@ var page_fully_loaded_event = new Event('page_fully_loaded');
 
 var init_started = false;
 
+//The element that will paly the video's
+var video_element;
+
 class Position{
     constructor(){
         this.top = 0;
@@ -300,12 +303,13 @@ function init(){
 	var a_scene = document.createElement("a-scene");
 
     //Sky
-    var a_sky = document.createElement("a-sky");
+    /*var a_sky = document.createElement("a-sky");
     a_sky.setAttribute("color", "#DDDDDD");
-    a_scene.appendChild(a_sky);
+    a_scene.appendChild(a_sky);*/
 
     //Assets
     var a_assets = document.createElement("a-assets");
+    a_assets.innerHTML = '<video id="iwb" autoplay loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>';
     a_scene.appendChild(a_assets);
 
     var img_id = 0;
@@ -371,6 +375,8 @@ function init(){
 	camera_entity.setAttribute("position", body_width/2 + " 0 0");
 	camera = document.createElement("a-camera");
 	camera.setAttribute("position", "0 0 0");
+	//camera.setAttribute("far", "200");
+	camera.setAttribute("stereocam","eye:left;");
 	camera_entity.appendChild(camera);
 
 	//Cursor
@@ -414,7 +420,12 @@ function init(){
     a_scene.addEventListener("exit-vr",exitVr);
 	a_scene.appendChild(camera_entity);
 
+	video_element = new VideoElement();
+    a_scene.appendChild(video_element.GetElement());
+
     document.body.appendChild(a_scene);
+    video_element.init();
+    video_element.SetScource("#iwb");
 };
 
 function enterVr(){
@@ -438,6 +449,8 @@ function checkKey(e) {
     else if (e.keyCode == '69') {
         var pos = camera.getAttribute("position");
         camera.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
+    } else if (e.keyCode == '84') {
+        video_element.ToggleMode();
     }
 
 }
