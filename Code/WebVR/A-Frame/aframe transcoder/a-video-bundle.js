@@ -1,14 +1,19 @@
 class VideoElement{
-	constructor(){
+	constructor(position, camera){
+
 		this.video_element = document.createElement("a-entity");
+		this.SetVisiblity(false);
 
 		this.video_element.innerHTML = '<a-video id="flatvid" src="" width="16" height="9" position="0 0 -10"></a-video>'
 	      +'<a-videosphere id="sphericalvid" src="" visible="false" rotation="0 180 0"></a-videosphere>'
 	      +'<a-entity id="vidcontrol" video-controls="src:"></a-entity>'
-	      +'<a-entity id="lefteye" geometry="primitive: sphere; radius: 100; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:;" scale="-1 1 1" stereo="eye:left" visible="false">'
+	      +'<a-entity id="lefteye" geometry="primitive: sphere; radius: 100; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:#iwb;" scale="-1 1 1" stereo="eye:left" visible="false">'
 	      +'</a-entity>'
-	      +'<a-entity id="righteye" geometry="primitive: sphere; radius: 100; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:;" scale="-1 1 1" stereo="eye:right" visible="false">'
+	      +'<a-entity id="righteye" geometry="primitive: sphere; radius: 100; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:#iwb;" scale="-1 1 1" stereo="eye:right" visible="false">'
 	      +'</a-entity>';
+
+		this.SetPosition(position);
+	    this.video_element.addEventListener("componentchanged", this.PositionOfCameraChanged.bind(this));
 
 	    this.mode = 0;
 	}
@@ -37,10 +42,20 @@ class VideoElement{
 	SetScource(source){
 		this.flatvid.setAttribute("src",source);
 	  	this.sphericalvid.setAttribute("src",source);
-	    this.lefteye.setAttribute("material","shader:flat; src:"+source+";");
+	    /*this.lefteye.setAttribute("material","shader:flat; src:"+source+";");
 	    this.righteye.setAttribute("material","shader:flat; src:"+source+";");
+*/
+	    this.videocontrols.setAttribute("video-controls","src:"+source+"");
+	}
 
-	    this.videocontrols.setAttribute("video-controls","src:"+source+";");
+	PositionOfCameraChanged(e){
+		if(e.name === "position"){
+			this.SetPosition(e.newData);
+		}
+	}
+
+	SetPosition(position){
+		this.video_element.setAttribute("position", position);
 	}
 
 	ShowVideo(){
@@ -61,5 +76,13 @@ class VideoElement{
           this.lefteye.setAttribute("visible", false);
           this.righteye.setAttribute("visible", false);
         }
+	}
+
+	SetVisiblity(bool){
+      	this.video_element.setAttribute("visible", bool);
+	}
+
+	IsVisible(){
+		return this.video_element.getAttribute("visible");
 	}
 }

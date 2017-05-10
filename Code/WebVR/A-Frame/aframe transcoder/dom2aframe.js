@@ -20,6 +20,9 @@ var page_fully_loaded_event = new Event('page_fully_loaded');
 
 var init_started = false;
 
+//Container for all the transcoded elements
+var a_element_container
+
 //The element that will paly the video's
 var video_element;
 
@@ -312,6 +315,11 @@ function init(){
     a_assets.innerHTML = '<video id="iwb" autoplay loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>';
     a_scene.appendChild(a_assets);
 
+    //Container for all the generated elements
+    a_element_container = document.createElement("a-entity");
+    a_element_container.setAttribute("id", "aElementContainer");
+    a_scene.appendChild(a_element_container);
+
     var img_id = 0;
     var div_depth = -0.2;
 
@@ -329,9 +337,8 @@ function init(){
         console.log(element);
 		var new_a_element = null;
 
-		if(element.tagName == "BODY" || element.tagName == "DIV" ){
+		if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION"){
 			new_a_element = new ContainerElement(element,div_depth);
-    		a_scene.appendChild(new_a_element.getAElement());
 
     		div_depth += 0.05;
 
@@ -342,13 +349,11 @@ function init(){
     	//Text based elements
 	    if(element.tagName == "P" || element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){
     		new_a_element = new TextElement(element);
-    		a_scene.appendChild(new_a_element.getAElement());
 	    }
 
         //Images
         if(element.tagName == "IMG"){
           new_a_element = new ImageElement(element, div_depth);
-          a_scene.appendChild(new_a_element.getAElement());
           a_assets.appendChild(new_a_element.getAsset());
 
           div_depth += 0.05;
@@ -359,12 +364,14 @@ function init(){
 
         if(element.tagName == "BUTTON" || element.tagName == "A"){
         	new_a_element = new ButtonElement(element);
-        	a_scene.appendChild(new_a_element.getAElement());
         }
 
+
         //Push the element in the array of all elements
-        if(new_a_element != null)
+        if(new_a_element != null){
+        	a_element_container.appendChild(new_a_element.getAElement());
         	a_elements.push(new_a_element);
+        }
 
         /*if(!element.getAttribute("keepinvr"))
         	element.style.display="none";*/
@@ -383,6 +390,7 @@ function init(){
 	cursor = document.createElement("a-cursor");
 	//cursor.setAttribute("fuse",true);
 	cursor.setAttribute("fuse-timeout",500);
+	cursor.setAttribute("color","green");
 	cursor.setAttribute("raycaster","objects: .clickable")
 	camera.appendChild(cursor);
 
@@ -420,8 +428,8 @@ function init(){
     a_scene.addEventListener("exit-vr",exitVr);
 	a_scene.appendChild(camera_entity);
 
-	video_element = new VideoElement();
-    a_scene.appendChild(video_element.GetElement());
+	video_element = new VideoElement(body_width/2 + " 0 0");
+    a_scene.appendChild(video_element.GetElement(), camera_entity);
 
     document.body.appendChild(a_scene);
     video_element.init();
@@ -442,15 +450,29 @@ function checkKey(e) {
 
     e = e || window.event;
 
+    //press E or A to go up and down. 
+    //press P to show video
+    //press T to change video representation method
     if (e.keyCode == '65') {
-    	var pos = camera.getAttribute("position");
-        camera.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
+    	var pos = camera_entity.getAttribute("position");
+        camera_entity.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
+        video_element.SetPosition(pos);
     }
     else if (e.keyCode == '69') {
-        var pos = camera.getAttribute("position");
-        camera.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
+        var pos = camera_entity.getAttribute("position");
+        camera_entity.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
+        video_element.SetPosition(pos);
     } else if (e.keyCode == '84') {
         video_element.ToggleMode();
+    } else if (e.keyCode == '80') {
+    	var v_element_visibility = video_element.IsVisible();
+        a_element_container.setAttribute("visible", v_element_visibility);
+        video_element.SetVisiblity(!v_element_visibility);
+
+        if(v_element_visibility)
+        	cursor.setAttribute("raycaster","objects:")
+        else
+        	cursor.setAttribute("raycaster","objects: .clickable");
     }
 
 }
