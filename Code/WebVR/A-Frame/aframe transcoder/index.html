@@ -55,7 +55,7 @@
     	<p id="divtext">A p in a div</p>
     </div>
 
-    <!--<img src="owl.jpg">-->
+    <img src="owl.jpg">
 
     <h2 class="float">Float</h2>
 
@@ -108,6 +108,10 @@
     <button onclick="element = document.getElementById('none'); element.style.display = 'block';">Show disp</button>
     <button onclick="element = document.getElementById('hidden'); element.style.visibility = 'visible';">Visible</button>
     <button onclick="element = document.getElementById('op'); element.style.opacity = '1';">Opacity</button>
+
+    <button onclick="element = document.createElement('p'); element.innerHTML= 'New Text'; document.body.appendChild(element);">Create p</button>
+
+    <button onclick="console.log('click');">Click test</button>
     <br>
     
     <!-- A-frame -->
