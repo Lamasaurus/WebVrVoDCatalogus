@@ -111,7 +111,7 @@
 
     <button onclick="element = document.createElement('p'); element.innerHTML= 'New Text'; document.body.appendChild(element);">Create p</button>
 
-    <button onclick="console.log('click');">Click test</button>
+    <button onclick="element = document.getElementById('divtext'); element.parentElement.removeChild(element);">Remove text</button>
     <br>
     
     <!-- A-frame -->

@@ -171,20 +171,14 @@ class TextElement extends Element{
         //Style attributes
         this.aelement.setAttribute("text","value: " + stripText(this.domelement.innerHTML) + ";");
 
-        var color = ""+element_style.getPropertyValue("color");
-        if(color !== this.aelement.getAttribute('color'))
-        	this.aelement.setAttribute('color', color);
-
-		//Set width first to 0, else it will get set to 0 after the new width is set
-        /*this.aelement.setAttribute("width",0);
-        var scale = pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"));
-        this.aelement.setAttribute("width",scale * 20);*/
+        //We have to reset the color to a void value.
+		this.aelement.setAttribute('color', "");
+        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
 
 		this.aelement.setAttribute("width",0);
         var width = (pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
         if(width != this.aelement.getAttribute("width"))
         	this.aelement.setAttribute("width",width);
-
 
         //First reset the anchor to nothing and then back to left
 		this.aelement.setAttribute("anchor","");
@@ -364,6 +358,16 @@ function AddNewElement(element){
         element.style.display="none";*/
 }
 
+function RemoveElement(removed_element){
+	for(var i = 0; i < a_elements.length; i++){
+		if(a_elements[i].getDomElement() == removed_element){
+			a_element_container.removeChild(a_elements[i].getAElement());
+
+			a_elements.splice(i,1);
+		}
+	}
+}
+
 function init(){
     THREE.ImageUtils.crossOrigin = '';
 
@@ -412,6 +416,11 @@ function init(){
 	            somethingdirty = true;
 	            UpdateAll();
 	        }
+	        for(var i = 0; i < mutation.removedNodes.length; i++){
+	            RemoveElement(mutation.removedNodes[i]);
+	            somethingdirty = true;
+	            UpdateAll();
+	        }
 	    })
 	});
 	observer.observe(document.body, {childList: true});
@@ -424,6 +433,7 @@ function init(){
 	camera.setAttribute("far", "90");
 	camera.setAttribute("near", "0.5");
 	camera.setAttribute("stereocam","eye:left;");
+	camera.setAttribute("wasd-controls-enabled", "true");
 	camera_entity.appendChild(camera);
 
 	//Cursor
@@ -431,7 +441,7 @@ function init(){
 	//cursor.setAttribute("fuse",true);
 	cursor.setAttribute("fuse-timeout",500);
 	cursor.setAttribute("color","green");
-	cursor.setAttribute("raycaster","objects: .clickable")
+	cursor.setAttribute("raycaster","objects: .clickable; far: 100;")
 	camera.appendChild(cursor);
 
 	//Cursor animations
@@ -494,6 +504,7 @@ function checkKey(e) {
     //press E or A to go up and down. 
     //press P to show video
     //press T to change video representation method
+    //press L to toggle moving
     if (e.keyCode == '65') {
     	var pos = camera_entity.getAttribute("position");
         camera_entity.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
@@ -508,12 +519,22 @@ function checkKey(e) {
     } else if (e.keyCode == '80') {
     	var v_element_visibility = video_element.IsVisible();
         a_element_container.setAttribute("visible", v_element_visibility);
-        video_element.SetVisiblity(!v_element_visibility);
 
-        if(v_element_visibility)
-        	cursor.setAttribute("raycaster","objects:")
-        else
-        	cursor.setAttribute("raycaster","objects: .clickable");
+        //Set position of the elements away from the clickable part
+        var position = a_element_container.getAttribute("position");
+        if(v_element_visibility){
+        	position.y = 0;
+        	cursor.setAttribute("raycaster","objects: .clickable; far: 100;");
+        }else{
+			position.y = 500;
+			cursor.setAttribute("raycaster","objects:; far: 100;");
+        }
+        a_element_container.setAttribute("position", position);
+
+        video_element.SetVisiblity(!v_element_visibility);
+    } else if (e.keyCode == '76'){
+    	//getAttribute for "wasd-controls-enebled" is a string
+    	camera.setAttribute("wasd-controls-enabled",!(camera.getAttribute("wasd-controls-enabled") == "true"));
     }
 
 }
