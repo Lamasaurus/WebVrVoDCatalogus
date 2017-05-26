@@ -398,7 +398,7 @@ function init(){
 
     //Calc the ammount of pixels in 1 meter
 	var standard_p = document.createElement("p");
-	standard_p.setAttribute("style", "font-size:1em;")
+	standard_p.setAttribute("style", "font-size:1vw;")
     document.body.appendChild(standard_p);
     pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
     pixel_text_size = 1/pixels_in_one_unit;
