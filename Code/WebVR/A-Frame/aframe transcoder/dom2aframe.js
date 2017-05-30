@@ -36,6 +36,10 @@ var div_depth = -0.2;
 //The section of a-frame where the image and video assets get placed
 var a_assets;
 
+var transparent;
+
+var dynamic_add_elements = true;
+
 class Position{
     constructor(){
         this.top = 0;
@@ -51,7 +55,7 @@ class Element{
 		this.aelement = null;
 
         //Listenes for direct css changes
-		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
+		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
 		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
 
         //Listenes for css animations
@@ -132,7 +136,7 @@ class Element{
         if(this.comparePosition(position) && !this.isDirty())
             return;
 
-        //Cash the last style and position
+        //Cash the last position
         this.updatePosition(position);
 
         var element_style = window.getComputedStyle(this.domelement);
@@ -142,8 +146,8 @@ class Element{
         var new_opacity = 0;
         if(element_style.getPropertyValue("visibility") !== "hidden" && element_style.getPropertyValue("display") !== "none")
             new_opacity = parseFloat(element_style.getPropertyValue("opacity"));
-        if(this.aelement.getAttribute("opacity") != new_opacity)
-        	this.aelement.setAttribute("opacity", new_opacity);
+    	this.aelement.setAttribute("opacity", "");
+    	this.aelement.setAttribute("opacity", new_opacity);
 
         this.dirty = false;
     }
@@ -172,8 +176,10 @@ class TextElement extends Element{
         this.aelement.setAttribute("text","value: " + stripText(this.domelement.innerHTML) + ";");
 
         //We have to reset the color to a void value.
-		this.aelement.setAttribute('color', "");
-        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+        if(transparent != element_style.getPropertyValue("color")){
+			this.aelement.setAttribute('color', "");
+	        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+	    }
 
 		this.aelement.setAttribute("width",0);
         var width = (pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
@@ -204,7 +210,8 @@ class ContainerElement extends Element{
 
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);
-		this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
+		if(transparent != element_style.getPropertyValue("background-color"))
+			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
 
 		var y = -this.position.top/pixels_in_one_unit - height/2;
 
@@ -239,8 +246,6 @@ class ImageElement extends Element{
 
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);
-
-		this.aelement.setAttribute("text", "hallo");
 
 		var y = -this.position.top/pixels_in_one_unit - height/2;
 
@@ -388,7 +393,7 @@ function init(){
 
     //Assets
     a_assets = document.createElement("a-assets");
-    a_assets.innerHTML = '<video id="iwb" autoplay loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>';
+    a_assets.innerHTML = '<video id="iwb" autoplay="false" loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>';
     a_scene.appendChild(a_assets);
 
     //Container for all the generated elements
@@ -404,6 +409,15 @@ function init(){
     pixel_text_size = 1/pixels_in_one_unit;
     document.body.removeChild(standard_p);
 
+    //Getting the value for this browser that means transparent
+    var trans_element = document.createElement("div");
+	trans_element.setAttribute("style", "background:none;display:none;")
+    document.body.appendChild(trans_element);
+	transparent = window.getComputedStyle(trans_element).getPropertyValue("background-color");
+	document.body.removeChild(trans_element);
+
+	console.log(transparent);
+
     //Transcode every element in the page
 	for (i = 0; i < items.length; i++)
 		AddNewElement(items[i]);
@@ -411,11 +425,13 @@ function init(){
 	//Observer to check for newly added or deleted DOM elements
 	var observer = new WebKitMutationObserver(function(mutations) {
 	    mutations.forEach(function(mutation) {
-	        for(var i = 0; i < mutation.addedNodes.length; i++){
-	            AddNewElement(mutation.addedNodes[i]);
-	            somethingdirty = true;
-	            UpdateAll();
-	        }
+	    	if(dynamic_add_elements){
+		        for(var i = 0; i < mutation.addedNodes.length; i++){
+		            AddNewElement(mutation.addedNodes[i]);
+		            somethingdirty = true;
+		            UpdateAll();
+		        }
+		    }
 	        for(var i = 0; i < mutation.removedNodes.length; i++){
 	            RemoveElement(mutation.removedNodes[i]);
 	            somethingdirty = true;
@@ -441,7 +457,7 @@ function init(){
 	//cursor.setAttribute("fuse",true);
 	cursor.setAttribute("fuse-timeout",500);
 	cursor.setAttribute("color","green");
-	cursor.setAttribute("raycaster","objects: .clickable; far: 100;")
+	cursor.setAttribute("raycaster","objects: .clickable; far: 90;")
 	camera.appendChild(cursor);
 
 	//Cursor animations
@@ -505,6 +521,7 @@ function checkKey(e) {
     //press P to show video
     //press T to change video representation method
     //press L to toggle moving
+    //press N to stop dynamicaly adding elements
     if (e.keyCode == '65') {
     	var pos = camera_entity.getAttribute("position");
         camera_entity.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
@@ -524,10 +541,10 @@ function checkKey(e) {
         var position = a_element_container.getAttribute("position");
         if(v_element_visibility){
         	position.y = 0;
-        	cursor.setAttribute("raycaster","objects: .clickable; far: 100;");
+        	cursor.setAttribute("raycaster","objects: .clickable; far: 90;");
         }else{
 			position.y = 500;
-			cursor.setAttribute("raycaster","objects:; far: 100;");
+			cursor.setAttribute("raycaster","objects:; far: 90;");
         }
         a_element_container.setAttribute("position", position);
 
@@ -535,6 +552,8 @@ function checkKey(e) {
     } else if (e.keyCode == '76'){
     	//getAttribute for "wasd-controls-enebled" is a string
     	camera.setAttribute("wasd-controls-enabled",!(camera.getAttribute("wasd-controls-enabled") == "true"));
+    } else if (e.keyCode == '78'){
+    	dynamic_add_elements = !dynamic_add_elements;
     }
 
 }
