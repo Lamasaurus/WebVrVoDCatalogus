@@ -1,6 +1,6 @@
 var pixels_in_one_unit,pixel_text_size;
 //Standard z index
-var z_index = -40;
+var z_index = 0;
 //Width of the body
 var body_width;
 
@@ -15,10 +15,14 @@ var animation_fps = 999;
 //Indicates that something was dirty and all other elements should check if they changed
 var somethingdirty = false;
 
-var vrcss;
+//Special css tags
+var vrcss,changing_style;
+//CSS values
+var invr_css = ".a-canvas{display: default;} a-scene{width: 100%; height: 100%;}", outvr_css = ".a-canvas{display: none;} a-scene{width: auto; height: auto;}";
 
 var page_fully_loaded_event = new Event('page_fully_loaded');
 
+//True if everything is initiated
 var init_started = false;
 
 //Container for all the transcoded elements
@@ -30,8 +34,8 @@ var video_element;
 //The id for image assets
 var img_id = 0;
 
-//The depth at which div's start to get placed
-var div_depth = -0.2;
+//The depth at which elemnts start to get placed
+var layer_depth = 0;
 
 //The section of a-frame where the image and video assets get placed
 var a_assets;
@@ -39,6 +43,12 @@ var a_assets;
 var transparent;
 
 var dynamic_add_elements = true;
+
+//The size of the CSS refference pixel times 2
+var pixels_per_meter = 200/0.26;
+
+//the depth difference between elements
+var layer_difference = 0.00001;
 
 class Position{
     constructor(){
@@ -50,9 +60,11 @@ class Position{
 }
 
 class Element{
-	constructor(domelement){
+	constructor(domelement, depth){
 		this.domelement = domelement;
 		this.aelement = null;
+
+		this.depth = depth;
 
         //Listenes for direct css changes
 		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
@@ -136,20 +148,26 @@ class Element{
         if(this.comparePosition(position) && !this.isDirty())
             return;
 
-        //Cash the last position
-        this.updatePosition(position);
+        if(!this.comparePosition(position)){
+	        //Cash the last position
+	        this.updatePosition(position);
 
-        var element_style = window.getComputedStyle(this.domelement);
-        this.elementSpecificUpdate(element_style);
+        	this.elementUpdatePosition();
+        }
 
-        //Set the opacity of the element
-        var new_opacity = 0;
-        if(element_style.getPropertyValue("visibility") !== "hidden" && element_style.getPropertyValue("display") !== "none")
-            new_opacity = parseFloat(element_style.getPropertyValue("opacity"));
-    	this.aelement.setAttribute("opacity", "");
-    	this.aelement.setAttribute("opacity", new_opacity);
+        if(this.isDirty){
+	        var element_style = window.getComputedStyle(this.domelement);
+	        this.elementSpecificUpdate(element_style);
 
-        this.dirty = false;
+	        //Set the opacity of the element
+	        var new_opacity = 0;
+	        if(element_style.getPropertyValue("visibility") !== "hidden" && element_style.getPropertyValue("display") !== "none")
+	            new_opacity = parseFloat(element_style.getPropertyValue("opacity"));
+	    	this.aelement.setAttribute("opacity", "");
+	    	this.aelement.setAttribute("opacity", new_opacity);
+
+	        this.dirty = false;
+	    }
     }
 }
 
@@ -160,18 +178,20 @@ function stripText(html){
 }
 
 class TextElement extends Element{
-	constructor(domelement){
-		super(domelement);
+	constructor(domelement, depth){
+		super(domelement, depth);
 
 		this.aelement = document.createElement("a-text");
 		this.update();
 	}
 
-	elementSpecificUpdate(element_style){
+	elementUpdatePosition(){
 		//Calc the y possition
         var y = -((this.position.bottom - this.position.top) / 2 + this.position.top);
-        this.aelement.setAttribute("position",{x: this.position.left/pixels_in_one_unit, y: y/pixels_in_one_unit, z: z_index});
+        this.aelement.setAttribute("position",{x: this.position.left/pixels_per_meter, y: y/pixels_per_meter, z: z_index + this.depth});
+	}
 
+	elementSpecificUpdate(element_style){
         //Style attributes
         this.aelement.setAttribute("text","value: " + stripText(this.domelement.innerHTML) + ";");
 
@@ -179,10 +199,15 @@ class TextElement extends Element{
         if(transparent != element_style.getPropertyValue("color")){
 			this.aelement.setAttribute('color', "");
 	        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+	        this.aelement.setAttribute("visible", true);
+	        this.aelement.setAttribute("side","");
+	        this.aelement.setAttribute("side","double");
+	    }else{
+	    	this.aelement.setAttribute("visible", false);
 	    }
 
 		this.aelement.setAttribute("width",0);
-        var width = (pixel_text_size * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
+        var width = (1/pixels_per_meter * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
         if(width != this.aelement.getAttribute("width"))
         	this.aelement.setAttribute("width",width);
 
@@ -194,35 +219,44 @@ class TextElement extends Element{
 
 class ContainerElement extends Element{
 	constructor(domelement, depth){
-		super(domelement);
-		this.div_depth = depth;
+		super(domelement, depth);
 
 		this.aelement = document.createElement("a-plane");
 		this.update();
 	}
 
-	elementSpecificUpdate(element_style){
-		var width = (this.position.right - this.position.left)/pixels_in_one_unit;
-		var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
+	elementUpdatePosition(){
+		this.width = (this.position.right - this.position.left)/pixels_per_meter;
+		this.height = (this.position.bottom - this.position.top)/pixels_per_meter;
 
 		if(this.domelement.tagName == "BODY")
-			body_width = width;
+			body_width = this.width;
 
-		this.aelement.setAttribute("width", width);
-		this.aelement.setAttribute("height", height);
-		if(transparent != element_style.getPropertyValue("background-color"))
+		var y = -this.position.top/pixels_per_meter - this.height/2;
+
+		this.aelement.setAttribute('position', {x: this.position.left/pixels_per_meter + this.width/2, y: y, z: z_index + this.depth});
+
+		this.aelement.setAttribute("width", this.width);
+		this.aelement.setAttribute("height", this.height);
+	}
+
+	elementSpecificUpdate(element_style){
+		if(transparent != element_style.getPropertyValue("background-color")){
+			this.aelement.setAttribute("visible", true);
 			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
-
-		var y = -this.position.top/pixels_in_one_unit - height/2;
-
-		this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+			this.aelement.setAttribute("side","");
+			this.aelement.setAttribute("side","double");
+		}
+		else{
+			this.aelement.setAttribute("visible", false);
+		}
 	}
 }
 
 class ImageElement extends Element{
 	constructor(domelement, depth){
-		super(domelement);
-        this.div_depth = depth;
+		super(domelement, depth);
+        this.depth = depth;
 
 		//Image asset creation
 		this.asset = this.domelement.cloneNode(true);
@@ -240,28 +274,33 @@ class ImageElement extends Element{
 		return this.asset;
 	}
 
-	elementSpecificUpdate(element_style){
-        var width = (this.position.right - this.position.left)/pixels_in_one_unit;
-		var height = (this.position.bottom - this.position.top)/pixels_in_one_unit;
+	elementUpdatePosition(){
+		var width = (this.position.right - this.position.left)/pixels_per_meter;
+		var height = (this.position.bottom - this.position.top)/pixels_per_meter;
 
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);
 
-		var y = -this.position.top/pixels_in_one_unit - height/2;
+		var y = -this.position.top/pixels_per_meter - height/2;
 
-		this.aelement.setAttribute('position', {x: this.position.left/pixels_in_one_unit + width/2, y: y, z: z_index + this.div_depth});
+		this.aelement.setAttribute('position', {x: this.position.left/pixels_per_meter + width/2, y: y, z: z_index + this.depth});
+	}
+
+	elementSpecificUpdate(element_style){
 	}
 }
 
 class ButtonElement extends Element{
-	constructor(domelement){
-		super(domelement);
+	constructor(domelement, depth){
+		super(domelement, depth);
 
 		this.aelement = document.createElement("a-entity");
+		this.aelement.setAttribute("side","double");
 
 		//Make separate container and text element
-		this.aplane = new ContainerElement(domelement, -0.1);
-		this.atext = new TextElement(domelement);
+		this.aplane = new ContainerElement(domelement, depth);
+		this.atext = new TextElement(domelement, depth - layer_difference);
+
 
 		//Add container and text to this entity
 		this.aelement.appendChild(this.aplane.getAElement());
@@ -276,6 +315,11 @@ class ButtonElement extends Element{
 
 	clickElement(){
 		this.domelement.click();
+	}
+
+	elementUpdatePosition(){
+		this.aplane.elementUpdatePosition();
+		this.atext.elementUpdatePosition();
 	}
 
 	elementSpecificUpdate(element_style){
@@ -324,43 +368,33 @@ function AddNewElement(element){
 	var new_a_element = null;
 
 	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION"){
-		new_a_element = new ContainerElement(element,div_depth);
-
-		div_depth += 0.001;
-
-		/*f(div_depth > 0.9)
-			div_depth = 0.9;*/
+		new_a_element = new ContainerElement(element,layer_depth);
 	}
 
 	//Text based elements
-    if(element.tagName == "P" || element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){
-		new_a_element = new TextElement(element);
-    }
+    if(element.tagName == "P" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
+		new_a_element = new TextElement(element, layer_depth);
 
     //Images
     if(element.tagName == "IMG"){
-      new_a_element = new ImageElement(element, div_depth);
+      new_a_element = new ImageElement(element, layer_depth);
       a_assets.appendChild(new_a_element.getAsset());
-
-      div_depth += 0.001;
-
-        /*if(div_depth > 0.9)
-            div_depth = 0.9;*/
     }
 
     if(element.tagName == "BUTTON" || element.tagName == "A"){
-    	new_a_element = new ButtonElement(element);
-    }
+    	new_a_element = new ButtonElement(element, layer_depth);
 
+    	//Because button element takes up 2 layers we increase the layer depth here
+		layer_depth += layer_difference;
+    }
 
     //Push the element in the array of all elements
     if(new_a_element != null){
     	a_element_container.appendChild(new_a_element.getAElement());
     	a_elements.push(new_a_element);
-    }
 
-    /*if(!element.getAttribute("keepinvr"))
-        element.style.display="none";*/
+    	layer_depth += layer_difference;
+    }
 }
 
 function RemoveElement(removed_element){
@@ -387,13 +421,14 @@ function init(){
 	a_scene.setAttribute("embedded");
 
     //Sky
-    /*var a_sky = document.createElement("a-sky");
-    a_sky.setAttribute("color", "#DDDDDD");
-    a_scene.appendChild(a_sky);*/
+    var a_sky = document.createElement("a-gradient-sky");
+    a_sky.setAttribute("material", "shader: gradient; topColor: 255 255 255; bottomColor: 10 10 10;");
+    a_scene.appendChild(a_sky);
 
     //Assets
     a_assets = document.createElement("a-assets");
-    a_assets.innerHTML = '<video id="iwb" autoplay="false" loop="true" src="city-4096-mp4-30fps-x264-ffmpeg.mp4"></video>';
+    //add demo video to assets
+    a_assets.innerHTML = '<video id="iwb" src="city-4096-mp4-30fps-x264-ffmpeg.mp4" preload="auto"></video>';
     a_scene.appendChild(a_assets);
 
     //Container for all the generated elements
@@ -401,22 +436,12 @@ function init(){
     a_element_container.setAttribute("id", "aElementContainer");
     a_scene.appendChild(a_element_container);
 
-    //Calc the ammount of pixels in 1 meter
-	var standard_p = document.createElement("p");
-	standard_p.setAttribute("style", "font-size:1vw;")
-    document.body.appendChild(standard_p);
-    pixels_in_one_unit = parseFloat(window.getComputedStyle(standard_p).getPropertyValue("font-size"));
-    pixel_text_size = 1/pixels_in_one_unit;
-    document.body.removeChild(standard_p);
-
     //Getting the value for this browser that means transparent
     var trans_element = document.createElement("div");
 	trans_element.setAttribute("style", "background:none;display:none;")
     document.body.appendChild(trans_element);
 	transparent = window.getComputedStyle(trans_element).getPropertyValue("background-color");
 	document.body.removeChild(trans_element);
-
-	console.log(transparent);
 
     //Transcode every element in the page
 	for (i = 0; i < items.length; i++)
@@ -442,21 +467,25 @@ function init(){
 	observer.observe(document.body, {childList: true});
 
 	//Camera
-	camera_entity = document.createElement("a-entity");
-	camera_entity.setAttribute("position", body_width/2 + " 0 0");
+	//Camera gets placed to show the page directeley, the z distance gets calculated with a/sin(A) = c/sin(C) where c is the z distance and a the body width / 2
+	// A = 50° C = 40°
 	camera = document.createElement("a-camera");
-	camera.setAttribute("position", "0 0 0");
-	camera.setAttribute("far", "90");
-	camera.setAttribute("near", "0.5");
+	camera.setAttribute("position", body_width/2 + " " + -body_width/4 + " " + ((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585);
+	camera.setAttribute("user-height", "0");
+	camera.setAttribute("fov", "80");
+	camera.setAttribute("far", "10000");
+	camera.setAttribute("near", "0.01");
 	camera.setAttribute("stereocam","eye:left;");
 	camera.setAttribute("wasd-controls-enabled", "true");
-	camera_entity.appendChild(camera);
 
 	//Cursor
 	cursor = document.createElement("a-cursor");
 	//cursor.setAttribute("fuse",true);
 	cursor.setAttribute("fuse-timeout",500);
+	cursor.setAttribute("position", "0 0 -0.1");
+	cursor.setAttribute("size", "0.1");
 	cursor.setAttribute("color","green");
+	cursor.setAttribute("geometry", "primitive: ring; radiusInner: 0.0005; radiusOuter: 0.001")
 	cursor.setAttribute("raycaster","objects: .clickable; far: 90;")
 	camera.appendChild(cursor);
 
@@ -486,33 +515,36 @@ function init(){
 
     //Inject css to get the VR button fixed
     vrcss = document.createElement('style');
-    vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{height:0;} .a-canvas{display: none;}";
+    vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
     document.body.appendChild(vrcss);
+    changing_style = document.createElement('style');
+    changing_style.innerHTML = outvr_css;
+    document.body.appendChild(changing_style);
 
     a_scene.setAttribute("stats", true);
     a_scene.addEventListener("enter-vr",enterVr);
     a_scene.addEventListener("exit-vr",exitVr);
-	a_scene.appendChild(camera_entity);
+	a_scene.appendChild(camera);
 
-	video_element = new VideoElement(body_width/2 + " 0 0");
-    a_scene.appendChild(video_element.GetElement(), camera_entity);
+	video_element = new VideoElement(body_width/2 + " " + -body_width/4 + " " + ((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585);
+    a_scene.appendChild(video_element.GetElement());
+    video_element.SetScource("#iwb");
 
     document.body.appendChild(a_scene);
-    video_element.init();
-    video_element.SetScource("#iwb");
 };
 
 function enterVr(){
     UpdateAll();
-    vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{height:0;} .a-canvas{ display: default; }";
+    changing_style.innerHTML = invr_css;
 }
 
 function exitVr(){
-    vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{height:0;} .a-canvas{ display: none; }";
+    changing_style.innerHTML = outvr_css;
 }
 
 document.onkeydown = checkKey;
 
+//Controls 
 function checkKey(e) {
 
     e = e || window.event;
@@ -522,22 +554,23 @@ function checkKey(e) {
     //press T to change video representation method
     //press L to toggle moving
     //press N to stop dynamicaly adding elements
-    if (e.keyCode == '65') {
-    	var pos = camera_entity.getAttribute("position");
-        camera_entity.setAttribute("position", pos.x+ " "+ (pos.y + 2) +" "+ pos.z);
+    //press O to show convas
+    if (e.keyCode == '65') { //press E or A to go up and down. 
+    	var pos = camera.getAttribute("position");
+        camera.setAttribute("position", pos.x+ " "+ (pos.y + 0.5) +" "+ pos.z);
         video_element.SetPosition(pos);
     }
-    else if (e.keyCode == '69') {
-        var pos = camera_entity.getAttribute("position");
-        camera_entity.setAttribute("position", pos.x+ " "+ (pos.y - 2) +" "+ pos.z);
+    else if (e.keyCode == '69') { //press E or A to go up and down. 
+        var pos = camera.getAttribute("position");
+        camera.setAttribute("position", pos.x+ " "+ (pos.y - 0.5) +" "+ pos.z);
         video_element.SetPosition(pos);
-    } else if (e.keyCode == '84') {
+    } else if (e.keyCode == '84') { //press T to change video representation method
         video_element.ToggleMode();
-    } else if (e.keyCode == '80') {
+    } else if (e.keyCode == '80') { //press P to show video
     	var v_element_visibility = video_element.IsVisible();
         a_element_container.setAttribute("visible", v_element_visibility);
 
-        //Set position of the elements away from the clickable part
+        //Set position of the elements away from the clickable part of the world
         var position = a_element_container.getAttribute("position");
         if(v_element_visibility){
         	position.y = 0;
@@ -549,11 +582,16 @@ function checkKey(e) {
         a_element_container.setAttribute("position", position);
 
         video_element.SetVisiblity(!v_element_visibility);
-    } else if (e.keyCode == '76'){
+    } else if (e.keyCode == '76'){ //press L to toggle moving
     	//getAttribute for "wasd-controls-enebled" is a string
     	camera.setAttribute("wasd-controls-enabled",!(camera.getAttribute("wasd-controls-enabled") == "true"));
-    } else if (e.keyCode == '78'){
+    } else if (e.keyCode == '78'){ //press N to stop dynamicaly adding elements
     	dynamic_add_elements = !dynamic_add_elements;
+    } else if (e.keyCode == '79'){ //press O to show convas
+    	if(changing_style.innerHTML == invr_css)
+    		changing_style.innerHTML = outvr_css;
+    	else
+    		changing_style.innerHTML = invr_css;
     }
 
 }

@@ -1,32 +1,50 @@
 class VideoElement{
-	constructor(position, camera){
+	constructor(position){
 
 		this.video_element = document.createElement("a-entity");
 		this.SetVisiblity(false);
 
-		this.video_element.innerHTML = '<a-video id="flatvid" src="" width="16" height="9" position="0 0 -10"></a-video>'
-	      +'<a-videosphere radius="80" id="sphericalvid" src="" visible="false" rotation="0 180 0"></a-videosphere>'
-	      +'<a-entity id="vidcontrol" video-controls="src:"></a-entity>'
-	      +'<a-entity id="lefteye" geometry="primitive: sphere; radius: 80; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:;" scale="-1 1 1" stereo="eye:left" visible="false">'
-	      +'</a-entity>'
-	      +'<a-entity id="righteye" geometry="primitive: sphere; radius: 80; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src:;" scale="-1 1 1" stereo="eye:right" visible="false">'
-	      +'</a-entity>';
+		this.flatvid = document.createElement("a-video");
+		this.flatvid.setAttribute("id","flatvid");
+		this.flatvid.setAttribute("width","16");
+		this.flatvid.setAttribute("height","9");
+		this.flatvid.setAttribute("position","0 0 -6");
+		this.video_element.appendChild(this.flatvid);
+
+		this.sphericalvid = document.createElement("a-videosphere");
+		this.sphericalvid.setAttribute("id","sphericalvid");
+		this.sphericalvid.setAttribute("radius","80");
+		this.sphericalvid.setAttribute("visible","false");
+		this.sphericalvid.setAttribute("rotation","0 180 0");
+		this.video_element.appendChild(this.sphericalvid);
+
+		this.lefteye = document.createElement("a-entity");
+		this.lefteye.setAttribute("id","lefteye");
+		this.lefteye.setAttribute("geometry","primitive: sphere; radius: 80; segmentsWidth: 64; segmentsHeight: 64;");
+		this.lefteye.setAttribute("material","shader: flat;");
+		this.lefteye.setAttribute("scale","-1 1 1");
+		this.lefteye.setAttribute("stereo","eye:left");
+		this.lefteye.setAttribute("visible","false");
+		this.video_element.appendChild(this.lefteye);
+
+		this.righteye = document.createElement("a-entity");
+		this.righteye.setAttribute("id","righteye");
+		this.righteye.setAttribute("geometry","primitive: sphere; radius: 80; segmentsWidth: 64; segmentsHeight: 64;");
+		this.righteye.setAttribute("material","shader: flat;");
+		this.righteye.setAttribute("scale","-1 1 1");
+		this.righteye.setAttribute("stereo","eye:left");
+		this.righteye.setAttribute("visible","false");
+		this.video_element.appendChild(this.righteye);
+
+		this.vidcontrol = document.createElement("a-entity");
+		this.vidcontrol.setAttribute("id","vidcontrol");
+		this.vidcontrol.setAttribute("video-controls","src:");
+		this.video_element.appendChild(this.vidcontrol);
 
 		this.SetPosition(position);
-	    this.video_element.addEventListener("componentchanged", this.PositionOfCameraChanged.bind(this));
 
+		//0=flat 1=spheric 2=stereographic spheric
 	    this.mode = 0;
-	}
-
-	/*
-	*	Should be called after the element is added to the document
-	*/
-	init(){
-		this.flatvid = document.getElementById("flatvid");
-	  	this.sphericalvid = document.getElementById("sphericalvid");
-	    this.lefteye = document.getElementById("lefteye");
-	    this.righteye = document.getElementById("righteye");
-	    this.videocontrols = document.getElementById("vidcontrol");
 	}
 
 	GetElement(){
@@ -44,14 +62,7 @@ class VideoElement{
 	  	this.sphericalvid.setAttribute("src",source);
 	    this.lefteye.setAttribute("material","shader:flat; src:"+source+";");
 	    this.righteye.setAttribute("material","shader:flat; src:"+source+";");
-
-	    this.videocontrols.setAttribute("video-controls","src:"+source+"");
-	}
-
-	PositionOfCameraChanged(e){
-		if(e.name === "position"){
-			this.SetPosition(e.newData);
-		}
+	    this.vidcontrol.setAttribute("video-controls","src:"+source+"");
 	}
 
 	SetPosition(position){
