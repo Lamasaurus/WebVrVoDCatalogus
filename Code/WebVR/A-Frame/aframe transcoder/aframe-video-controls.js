@@ -208,8 +208,7 @@
 
 	    });
 
-
-	    window.addEventListener('keyup', function(event) {
+	    this.inputhandler = function(event) {
 	      switch (event.keyCode) {
 
 	        // If space bar is pressed, fire click on play_image
@@ -243,7 +242,10 @@
 	        break;
 
 	      }
-	    }, false);
+	    }
+
+
+	    window.addEventListener('keyup', this.inputhandler , false);
 
 
 	    // Create transport bar
@@ -347,7 +349,9 @@
 	   * Called when a component is removed (e.g., via removeAttribute).
 	   * Generally undoes all modifications to the entity.
 	   */
-	  remove: function () { },
+	  remove: function () { 
+	  		window.removeEventListener('keyup', this.inputhandler , false);
+	  },
 
 	  /**
 	   * Called on each scene tick.

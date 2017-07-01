@@ -33,6 +33,7 @@ var video_element;
 
 //The id for image assets
 var img_id = 0;
+var vid_id = 0;
 
 //The depth at which elemnts start to get placed
 var layer_depth = 0;
@@ -81,7 +82,48 @@ class Element{
         this.position = new Position();
 
         //Flag for when we need to redraw
-        this.dirty = false;
+        this.dirty = true;
+	}
+
+	//Returns true if attribute existes and is copyed to the aframe element
+	copyAttribute(attr){
+		if(this.domelement.hasAttribute(attr)){
+			this.aelement.setAttribute(attr, this.domelement.getAttribute(attr));
+			return true;
+		}
+	}
+
+	//Adds all javascript functionality to the objects
+	addFunctionality(){
+		var is_clickable;
+		//Some standard operations
+		is_clickable = this.copyAttribute('onclick');
+		is_clickable = this.copyAttribute('onmousedown') || is_clickable;
+		is_clickable = this.copyAttribute('onmouseenter') || is_clickable;
+		is_clickable = this.copyAttribute('onmouseleave') || is_clickable;
+		is_clickable = this.copyAttribute('onmouseup') || is_clickable;
+
+		//Video specific functionality, these overide prevously assigned func.
+		if(this.domelement.hasAttribute("show-player")){
+			this.aelement.setAttribute("onclick", "showVideoPlayer();");
+			is_clickable = true;
+		}
+
+		if(this.domelement.hasAttribute("play-video")){
+			//Video asset creation
+			var asset = document.createElement("video");
+			var asset_id = "vid-asset-" + vid_id++;
+	        asset.setAttribute("id",asset_id);
+	        asset.setAttribute("src",this.domelement.getAttribute("play-video"));
+	        asset.setAttribute("preload","auto");
+	        a_assets.appendChild(asset);
+
+			this.aelement.setAttribute("onclick", "showNewVideo('"+asset_id+"');");
+			is_clickable = true;
+		}
+
+		if(is_clickable)
+			this.aelement.classList.add('clickable');
 	}
 
     startAnimation(){
@@ -178,11 +220,14 @@ function stripText(html){
 }
 
 class TextElement extends Element{
-	constructor(domelement, depth){
+	constructor(domelement, depth,dontAddFunc){
 		super(domelement, depth);
 
 		this.aelement = document.createElement("a-text");
 		this.update();
+
+		if(!dontAddFunc)
+			this.addFunctionality();
 	}
 
 	elementUpdatePosition(){
@@ -218,11 +263,14 @@ class TextElement extends Element{
 }
 
 class ContainerElement extends Element{
-	constructor(domelement, depth){
+	constructor(domelement, depth, dontAddFunc){
 		super(domelement, depth);
 
 		this.aelement = document.createElement("a-plane");
 		this.update();
+
+		if(!dontAddFunc)
+			this.addFunctionality();
 	}
 
 	elementUpdatePosition(){
@@ -248,6 +296,7 @@ class ContainerElement extends Element{
 			this.aelement.setAttribute("side","double");
 		}
 		else{
+			this.aelement.setAttribute('color', element_style.getPropertyValue("background-color"));
 			this.aelement.setAttribute("visible", false);
 		}
 	}
@@ -259,15 +308,17 @@ class ImageElement extends Element{
         this.depth = depth;
 
 		//Image asset creation
-		this.asset = this.domelement.cloneNode(true);
+		var asset = this.domelement.cloneNode(true);
         var asset_id = "img-asset-" + img_id++;
-        this.asset.setAttribute("id",asset_id);
+        asset.setAttribute("id",asset_id);
+        a_assets.appendChild(asset);
 
 		this.aelement = document.createElement("a-image");
 		this.aelement.setAttribute("src","#"+asset_id);
 
 		//Initiation update
 		this.update();
+		this.addFunctionality();
 	}
 
 	getAsset(){
@@ -298,19 +349,15 @@ class ButtonElement extends Element{
 		this.aelement.setAttribute("side","double");
 
 		//Make separate container and text element
-		this.aplane = new ContainerElement(domelement, depth);
-		this.atext = new TextElement(domelement, depth - layer_difference);
-
+		this.aplane = new ContainerElement(domelement, depth, true);
+		this.atext = new TextElement(domelement, depth - layer_difference, true);
 
 		//Add container and text to this entity
 		this.aelement.appendChild(this.aplane.getAElement());
 		this.aelement.appendChild(this.atext.getAElement());
 
-		//Make shure these are clickable by the raycaster
-		this.aelement.classList.add('clickable');
-
-		this.aelement.setAttribute("onclick", this.domelement.getAttribute("onclick"));
 		this.update();
+		this.addFunctionality();
 	}
 
 	clickElement(){
@@ -367,6 +414,10 @@ function AddNewElement(element){
 	console.log(element);
 	var new_a_element = null;
 
+	//Some random element gets spawned and deleted immediately after, I don't see where it comes from or what its purpose is, but it gives errors. Now they don't get added
+	if(element.innerHTML == '<div classname="t" onsubmit="t" onchange="t" onfocusin="t" style="margin: 0px; border: 0px; box-sizing: content-box; width: 1px; padding: 1px; display: block; zoom: 1;"><div style="width: 5px;"></div></div>')
+		return;
+
 	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION"){
 		new_a_element = new ContainerElement(element,layer_depth);
 	}
@@ -376,10 +427,8 @@ function AddNewElement(element){
 		new_a_element = new TextElement(element, layer_depth);
 
     //Images
-    if(element.tagName == "IMG"){
+    if(element.tagName == "IMG")
       new_a_element = new ImageElement(element, layer_depth);
-      a_assets.appendChild(new_a_element.getAsset());
-    }
 
     if(element.tagName == "BUTTON" || element.tagName == "A"){
     	new_a_element = new ButtonElement(element, layer_depth);
@@ -400,6 +449,7 @@ function AddNewElement(element){
 function RemoveElement(removed_element){
 	for(var i = 0; i < a_elements.length; i++){
 		if(a_elements[i].getDomElement() == removed_element){
+			console.log(a_elements[i]);
 			a_element_container.removeChild(a_elements[i].getAElement());
 
 			a_elements.splice(i,1);
@@ -528,7 +578,7 @@ function init(){
 
 	video_element = new VideoElement(body_width/2 + " " + -body_width/4 + " " + ((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585);
     a_scene.appendChild(video_element.GetElement());
-    video_element.SetScource("#iwb");
+    video_element.SetScource("iwb");
 
     document.body.appendChild(a_scene);
 };
@@ -567,21 +617,7 @@ function checkKey(e) {
     } else if (e.keyCode == '84') { //press T to change video representation method
         video_element.ToggleMode();
     } else if (e.keyCode == '80') { //press P to show video
-    	var v_element_visibility = video_element.IsVisible();
-        a_element_container.setAttribute("visible", v_element_visibility);
-
-        //Set position of the elements away from the clickable part of the world
-        var position = a_element_container.getAttribute("position");
-        if(v_element_visibility){
-        	position.y = 0;
-        	cursor.setAttribute("raycaster","objects: .clickable; far: 90;");
-        }else{
-			position.y = 500;
-			cursor.setAttribute("raycaster","objects:; far: 90;");
-        }
-        a_element_container.setAttribute("position", position);
-
-        video_element.SetVisiblity(!v_element_visibility);
+    	showVideoPlayer();
     } else if (e.keyCode == '76'){ //press L to toggle moving
     	//getAttribute for "wasd-controls-enebled" is a string
     	camera.setAttribute("wasd-controls-enabled",!(camera.getAttribute("wasd-controls-enabled") == "true"));
@@ -594,6 +630,29 @@ function checkKey(e) {
     		changing_style.innerHTML = invr_css;
     }
 
+}
+
+function showNewVideo(id){
+	video_element.SetScource(id);
+	showVideoPlayer();
+}
+
+function showVideoPlayer(){
+	var v_element_visibility = video_element.IsVisible();
+    a_element_container.setAttribute("visible", v_element_visibility);
+
+    //Set position of the elements away from the clickable part of the world
+    var position = a_element_container.getAttribute("position");
+    if(v_element_visibility){
+    	position.y = 0;
+    	cursor.setAttribute("raycaster","objects: .clickable; far: 90;");
+    }else{
+		position.y = 500;
+		cursor.setAttribute("raycaster","objects:; far: 90;");
+    }
+    a_element_container.setAttribute("position", position);
+
+    video_element.SetVisiblity(!v_element_visibility);
 }
 
 function load(){

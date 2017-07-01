@@ -42,7 +42,7 @@
 
   </head>
   <body>
-    <h1>Title 1</h1>
+    <h1 id="firsttitle" onmouseenter="document.getElementById('firsttitle').style.fontSize = '50px';" onmouseleave="document.getElementById('firsttitle').style.fontSize = '30px';">Title 1</h1>
     <h3>Title 3</h3>
     <p id="sometext">Text</p>
 
@@ -108,6 +108,11 @@
     <button onclick="element = document.createElement('p'); element.innerHTML= 'New Text'; document.body.appendChild(element);">Create p</button>
 
     <button onclick="element = document.getElementById('divtext'); element.parentElement.removeChild(element);">Remove text</button>
+
+    <button show-player>Show player</button>
+    <button play-video="city-4096-mp4-30fps-x264-ffmpeg.mp4">Play new vid</button>
+    <button play-video="2017_05_01_19_37_22.mp4">iwb</button>
+    <button play-video="MaryOculus.mp4">Mary</button>
     <br>
     
     <!-- A-frame -->
