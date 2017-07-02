@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="robots" content="noindex, nofollow, notranslate, noimageindex">
+	<title>ProFlow VodLib</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<link href="icon/favicon.ico" rel="shortcut icon" type="image/x-icon">
+	<link href="css/main.css" media="screen" rel="stylesheet" type="text/css">
+	<link href="css/custom.css" media="screen" rel="stylesheet" type="text/css">
+</head>
+<body class="tvTheek">
+	<div id="page">
+
+		<header>
+			<div class="wrap">
+				<section class="siteLabel">
+					<h1><span class="logo"><a href="https://www.iminds.be/en/projects/PRO-FLOW"><img alt="PRO-FLOW" src="icon/PRO-FLOW-logo-in-ellipse.svg"></a></span></h1>
+				</section>
+				<nav class="main">
+					<ul>
+						<li><a href="#" class="page">TV-KIJKEN</a></li>
+						<li><a href="#" class="page">OPNAMES</a></li>
+						<li><a href="#" class="page">TV-GIDS</a></li>
+						<li class="active"><a href="#" class="page">TV-THEEK</a></li>
+						<li><a href="#" class="page">INSTELLINGEN</a></li>
+					</ul>
+				</nav>
+			</div>
+
+			<nav class="sub">
+				<ul>
+					<li><a href="#" class="page">In de Kijker</a></li>
+					<li class="active"><a href="#" class="page">Films</a></li>
+					<li hover="navsubliapagehover"><a href="#" class="page">Series</a></li>
+					<li><a href="#" class="page">Kids</a></li>
+					<li><a href="#" class="page">Sport</a></li>
+					<li><a href="#" class="page passion">Passion</a></li>
+				</ul>
+			</nav>
+
+			<section class="search">
+				<form id="searchForm" action="/tv-theek/zoek/" method="get">
+					<div class="inputWrap"><label for="searchField">Search</label><input name="q" class="textfield" id="searchField" autocomplete="off" placeholder="Zoeken"
+						 type="text">
+						<div class="lnkClear" style="display: none;"><a id="anulleren" href="#">Annuleren</a></div>
+						<div style="display: none;" class="lnkClear"><a href="#">clear</a></div>
+					</div>
+					<div class="submitWrap"><input class="submit" value="search" id="searchSubmit" type="submit"></div>
+				</form>
+			</section>
+
+			<section class="filters">
+				<header>
+					<h1><span>Toon: <span class="value">Filter</span></span>
+					</h1>
+				</header>
+			</section>
+
+		</header>
+
+		<div class="main" id="carouselContainer">
+			<div id="overlays">
+				<div id="overlayBG" onclick="closeVodPopup();"></div>
+				<section style="margin-top: 150px;transform:scale(1.3);" id="ovrVOD" class="overlay"></section>
+				<div id="videoPlayerContainer">
+					<video id="videoPlayer" controls></video>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	<script src="js/proflow.js"></script>
+	<script src="js/dash.all.min.js"></script>
+	<script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
+	<script src="js/a-video-bundle.js"></script>
+	<script src="js/aframe-stereo-component.js"></script>
+	<script src="js/aframe-video-controls.js"></script>
+	<script src="js/dom2aframe.js"></script>
+</body>
+</html>

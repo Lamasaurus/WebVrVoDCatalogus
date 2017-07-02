@@ -423,7 +423,7 @@ function AddNewElement(element){
 	}
 
 	//Text based elements
-    if(element.tagName == "P" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
+    if(element.tagName == "P" || element.tagName == "A" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
 		new_a_element = new TextElement(element, layer_depth);
 
     //Images
@@ -605,31 +605,44 @@ function checkKey(e) {
     //press L to toggle moving
     //press N to stop dynamicaly adding elements
     //press O to show convas
-    if (e.keyCode == '65') { //press E or A to go up and down. 
+
+    switch(e.keyCode){
+    case 65: //press E or A to go up and down. 
     	var pos = camera.getAttribute("position");
         camera.setAttribute("position", pos.x+ " "+ (pos.y + 0.5) +" "+ pos.z);
         video_element.SetPosition(pos);
-    }
-    else if (e.keyCode == '69') { //press E or A to go up and down. 
+    	break;
+
+    case 69: //press E or A to go up and down. 
         var pos = camera.getAttribute("position");
         camera.setAttribute("position", pos.x+ " "+ (pos.y - 0.5) +" "+ pos.z);
         video_element.SetPosition(pos);
-    } else if (e.keyCode == '84') { //press T to change video representation method
+        break;
+
+    case 84: //press T to change video representation method
         video_element.ToggleMode();
-    } else if (e.keyCode == '80') { //press P to show video
+        break;
+
+    case 80: //press P to show video
     	showVideoPlayer();
-    } else if (e.keyCode == '76'){ //press L to toggle moving
+    	break;
+
+    case 76: //press L to toggle moving
     	//getAttribute for "wasd-controls-enebled" is a string
     	camera.setAttribute("wasd-controls-enabled",!(camera.getAttribute("wasd-controls-enabled") == "true"));
-    } else if (e.keyCode == '78'){ //press N to stop dynamicaly adding elements
+    	break; 
+
+    case 78: //press N to stop dynamicaly adding elements
     	dynamic_add_elements = !dynamic_add_elements;
-    } else if (e.keyCode == '79'){ //press O to show convas
+    	break;
+
+    case 79: //press O to show convas
     	if(changing_style.innerHTML == invr_css)
     		changing_style.innerHTML = outvr_css;
     	else
     		changing_style.innerHTML = invr_css;
+    	break;
     }
-
 }
 
 function showNewVideo(id){
