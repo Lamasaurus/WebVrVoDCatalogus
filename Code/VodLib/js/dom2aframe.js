@@ -1,6 +1,10 @@
+var debugging = true;
+
 var pixels_in_one_unit,pixel_text_size;
+
 //Standard z index
 var z_index = 0;
+
 //Width of the body
 var body_width;
 
@@ -16,7 +20,7 @@ var somethingdirty = false;
 //Special css tags
 var vrcss,changing_style;
 //CSS values
-var invr_css = ".a-canvas{display: default;} a-scene{width: 100%; height: 100%;}", outvr_css = ".a-canvas{display: none;} a-scene{width: auto; height: auto;}";
+var invr_css = ".a-canvas{display: default;} a-scene{width: 100%; height: 100%;} *{user-select: none;}", outvr_css = ".a-canvas{display: none;} a-scene{width: auto; height: auto;}";
 
 var page_fully_loaded_event = new Event('page_fully_loaded');
 
@@ -50,6 +54,11 @@ var pixels_per_meter = 200/0.26;
 //the depth difference between elements
 var layer_difference = 0.00001;
 
+function log(item){
+	if(debugging)
+		console.log(item);
+}
+
 class Position{
     constructor(){
         this.top = 0;
@@ -62,13 +71,15 @@ class Position{
 class Element{
 	constructor(domelement, depth){
 		this.domelement = domelement;
+		//Make sure dom elements can tell theyr higher structure to update
+		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
 		this.aelement = null;
 
 		this.depth = depth;
 
         //Listenes for direct css changes
-		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false });
-		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false });
+		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false, attributeOldValue : true });
+		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false, attributeOldValue : true });
 
         //Listenes for css animations
         this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
@@ -87,12 +98,13 @@ class Element{
 	setId(){
 		this.id = element_id++;
 		this.aelement.setAttribute("id","generated_element_"+this.id);
+		this.aelement.domelement = this.domelement;
 	}
 
 	//Returns true if attribute existes and is copyed to the aframe element
 	copyAttribute(attr){
 		if(this.domelement.hasAttribute(attr)){
-			this.aelement.setAttribute(attr, this.domelement.getAttribute(attr));
+			this.aelement.setAttribute(attr, "var generatedFunction = function(){" + this.domelement.getAttribute(attr) + ";}; generatedFunction.call(this.domelement);");
 			return true;
 		}
 	}
@@ -107,22 +119,25 @@ class Element{
 		is_clickable = this.copyAttribute('onmouseleave') || is_clickable;
 		is_clickable = this.copyAttribute('onmouseup') || is_clickable;
 
-		//Video specific functionality, these overide prevously assigned func.
+		//Video specific functionality
 		if(this.domelement.hasAttribute("show-player")){
-			this.aelement.setAttribute("onclick", "showVideoPlayer();");
+			this.aelement.setAttribute("onclick", "showVideoPlayer(); " + this.aelement.getAttribute("onclick"));
 			is_clickable = true;
 		}
 
 		if(this.domelement.hasAttribute("play-video")){
 			//Video asset creation
 			var asset = document.createElement("video");
+
 			var asset_id = "vid-asset-" + vid_id++;
+
 	        asset.setAttribute("id",asset_id);
 	        asset.setAttribute("src",this.domelement.getAttribute("play-video"));
 	        asset.setAttribute("preload","auto");
+
 	        a_assets.appendChild(asset);
 
-			this.aelement.setAttribute("onclick", "showNewVideo('"+asset_id+"');");
+			this.aelement.setAttribute("onclick", "showNewVideo('"+asset_id+"'); " + this.aelement.getAttribute("onclick"));
 			is_clickable = true;
 		}
 
@@ -166,6 +181,15 @@ class Element{
         UpdateAll.bind(this).call();
     }
 
+    setSubtreeDirty(){
+    	this.setDirty();
+
+    	var children = this.domelement.childNodes;
+		for(var i = 0, len = children.length; i < len; i++)
+			if(children[i].setSubtreeDirty)
+				children[i].setSubtreeDirty();
+    }
+
     setDirty(){
     	this.dirty = true;
     }
@@ -195,11 +219,28 @@ class Element{
 
     //Gets called on the object that invokes the whole update chain, which is garanteed to be dirty
     updateDirt(mutation){
-    	console.log(this);
-    	console.log(mutation);
-        this.setDirty();
-        this.update();
-        somethingdirty = true;
+    	if(SetDragEvent(this) || !mutation)
+    		return;
+
+    	for(var i = 0; i < mutation.length; i++){
+	    	//Check if the element just stayed the same as before
+	        if(mutation[i].oldValue === this.domelement.getAttribute(mutation[i].attributeName))
+	        	continue;
+
+	        log("Mutated element:")
+	    	log(this);
+	    	log("Mutation:")
+	    	log(mutation[i]);
+
+	    	//Check if the elements style and possibly the style of its children changed
+	        if(mutation[i].type === "attributes" && (mutation[i].attributeName === "class" || mutation[i].attributeName === "style"))
+	        	this.setSubtreeDirty();
+	        else
+	        	this.setDirty();
+
+	        //this.update();
+	        somethingdirty = true;
+	    }
     }
 
     update(){
@@ -213,7 +254,6 @@ class Element{
         if(!this.comparePosition(position)){
 	        //Cash the last position
 	        this.updatePosition(position);
-
         	this.elementUpdatePosition();
         }
 
@@ -236,6 +276,11 @@ class Element{
 //Returns if an element is visible, el.offsetParent is null if a parent is invisible but the body always has a null value with this
 function isNotHidden(el, style){
 	return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none");
+}
+
+function isUrl(s) {
+   var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+   return regexp.test(s);
 }
 
 function stripText(html){
@@ -319,15 +364,20 @@ class ContainerElement extends Element{
 
 	elementSpecificUpdate(element_style){
 		var background_color = element_style.getPropertyValue("background-color");
+		var background_image = element_style.getPropertyValue("background-image").slice(4, -1).replace(/"/g, "");
 		this.aelement.setAttribute("visible", "");
-		if(transparent != background_color){
+		if(transparent != background_color || background_image){
 			this.aelement.setAttribute("visible", true);
-			this.aelement.setAttribute('color', background_color);
+
+			if(isUrl(background_image))
+				this.aelement.setAttribute('material','src: ' + background_image);
+			else
+				this.aelement.setAttribute('color', background_color);
+
 			this.aelement.setAttribute("side","");
 			this.aelement.setAttribute("side","double");
 		}
 		else{
-			this.aelement.setAttribute('color', background_color);
 			this.aelement.setAttribute("visible", false);
 		}
 	}
@@ -373,7 +423,7 @@ class ImageElement extends Element{
 	}
 }
 
-class ButtonElement extends Element{
+class TextWithBackgroundElement extends Element{
 	constructor(domelement, depth){
 		super(domelement, depth);
 
@@ -384,6 +434,9 @@ class ButtonElement extends Element{
 		this.aplane = new ContainerElement(domelement, depth, true);
 		this.atext = new TextElement(domelement, depth - layer_difference, true);
 
+		//Because this element takes up 2 layers we increase the layer depth here
+		layer_depth += layer_difference;
+
 		//Add container and text to this entity
 		this.aelement.appendChild(this.aplane.getAElement());
 		this.aelement.appendChild(this.atext.getAElement());
@@ -393,8 +446,8 @@ class ButtonElement extends Element{
 		this.addFunctionality();
 	}
 
-	clickElement(){
-		this.domelement.click();
+	isDirty(){
+		return this.aplane.isDirty() || this.atext.isDirty() || this.isdirty;
 	}
 
 	elementUpdatePosition(){
@@ -408,21 +461,26 @@ class ButtonElement extends Element{
 	}
 }
 
-var grabbing = false;
-
+var grabbing = false, grab_init = false;
 //Check if the event is triggered because of a grab
-function IsDragEvent(element){
-	if(!(element instanceof ContainerElement))
+function SetDragEvent(element){
+	if(!(element instanceof ContainerElement)){
+		grabbing = false;
 		return false;
+	}
 
 	var dom_element = element.getDomElement();
-	if(dom_element.tagName == "BODY" && dom_element.classList.contains("a-grabbing") && !grabbing){
+	if(dom_element.tagName === "BODY" && dom_element.classList.contains("a-grabbing") && !grab_init){
 		grabbing = true;
+		grab_init = true;
 		return true;
-	}else if(dom_element.tagName == "BODY" && !dom_element.classList.contains("a-grabbing") && grabbing){
-		grabbing = false;
+	}else if(dom_element.tagName === "BODY" && !dom_element.classList.contains("a-grabbing") && grab_init){
+		grabbing = true;
+		grab_init = false;
 		return true;
 	}
+
+	grabbing = false;
 	return false;
 }
 
@@ -431,10 +489,10 @@ function UpdateAll(mutations){
     if(update_all && somethingdirty){
 
         //Stop everything from updating when dragging
-        if(IsDragEvent(this))
+        if(grabbing)
             return;
 
-        console.log("updateall");
+        log("Updating all Elements");
 
     	for(var i = 0; i < a_elements.length; i++)
     		a_elements[i].update();
@@ -444,7 +502,8 @@ function UpdateAll(mutations){
 }
 
 function AddNewElement(element){
-	console.log(element);
+	log("New element:")
+	log(element);
 	var new_a_element = null;
 
 	//Some random element gets spawned and deleted immediately after, I don't see where it comes from or what its purpose is, but it gives errors. Now they don't get added
@@ -456,19 +515,12 @@ function AddNewElement(element){
 	}
 
 	//Text based elements
-    if(element.tagName == "P" || element.tagName == "A" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
-		new_a_element = new TextElement(element, layer_depth);
-
+    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
+    	new_a_element = new TextWithBackgroundElement(element, layer_depth);
+    
     //Images
     if(element.tagName == "IMG")
       new_a_element = new ImageElement(element, layer_depth);
-
-    if(element.tagName == "BUTTON"){
-    	new_a_element = new ButtonElement(element, layer_depth);
-
-    	//Because button element takes up 2 layers we increase the layer depth here
-		layer_depth += layer_difference;
-    }
 
     //Push the element in the array of all elements
     if(new_a_element != null){
@@ -482,7 +534,8 @@ function AddNewElement(element){
 function RemoveElement(removed_element){
 	for(var i = 0; i < a_elements.length; i++){
 		if(a_elements[i].getDomElement() == removed_element){
-			console.log(a_elements[i]);
+			log("Element removed:");
+			log(a_elements[i]);
 			a_element_container.removeChild(a_elements[i].getAElement());
 
 			a_elements.splice(i,1);
@@ -638,6 +691,7 @@ function checkKey(e) {
     //press L to toggle moving
     //press N to stop dynamicaly adding elements
     //press O to show convas
+    //press I to inspect (does not open inspector)
 
     switch(e.keyCode){
     case 65: //press E or A to go up and down. 
@@ -675,6 +729,11 @@ function checkKey(e) {
     	else
     		changing_style.innerHTML = invr_css;
     	break;
+
+    case 73: //press I to inspect (does not open inspector)
+    	dynamic_add_elements = false;
+    	changing_style.innerHTML = invr_css;
+    	break;
     }
 }
 
@@ -685,20 +744,21 @@ function showNewVideo(id){
 
 function showVideoPlayer(){
 	var v_element_visibility = video_element.IsVisible();
+    video_element.SetVisiblity(!v_element_visibility);
     a_element_container.setAttribute("visible", v_element_visibility);
 
     //Set position of the elements away from the clickable part of the world
     var position = a_element_container.getAttribute("position");
     if(v_element_visibility){
-    	position.y = 0;
+    	position = {x : position.x, y : position.y+500, z : position.z};
     	cursor.setAttribute("raycaster","objects: .clickable; far: 90;");
     }else{
-		position.y = 500;
+		position = {x : position.x, y : position.y-500, z : position.z};
 		cursor.setAttribute("raycaster","objects:; far: 90;");
     }
+    a_element_container.setAttribute("position", "");
     a_element_container.setAttribute("position", position);
 
-    video_element.SetVisiblity(!v_element_visibility);
 }
 
 function load(){

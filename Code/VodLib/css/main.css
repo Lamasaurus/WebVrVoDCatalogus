@@ -1634,7 +1634,7 @@ nav.main ul li .page {
   padding: 22px 10px;
   line-height: 1em;
 }
-nav.main ul li a.page:hover {
+nav.main ul li a.page:hover, .navmainullu a.page {
   color: #ffc421;
 }
 nav.main ul li.active .page {
@@ -1745,7 +1745,6 @@ nav.sub li .page:after {
 }
 nav.sub li a.page:hover, .navsubliapagehover a.page {
   color: #ffc421;
-  background-color: blue;
 }
 nav.sub li.active .page {
   color: #ffc421;
