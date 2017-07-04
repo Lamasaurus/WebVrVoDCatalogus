@@ -10736,7 +10736,7 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
 .modList.vods > header h1 {
   display: inline-block;
 }
-.modList.vods > header h1 span {
+.modList.vods > header span {
   color: #fff;
   font-family: "Interstate Light", Arial;
   text-transform: uppercase;

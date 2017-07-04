@@ -79,7 +79,7 @@ class Element{
 
         //Listenes for direct css changes
 		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false, attributeOldValue : true });
-		(new MutationObserver(UpdateAll.bind(this))).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false, attributeOldValue : true });
+		(new MutationObserver(UpdateAll)).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false, attributeOldValue : true });
 
         //Listenes for css animations
         this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
@@ -143,11 +143,11 @@ class Element{
 
 		if(this.domelement.hasAttribute("hover")){
 
-			this.aelement.hover = () => {
+			this.aelement.hover = function() {
 				this.domelement.classList.add(this.domelement.getAttribute("hover"));
 			};
 
-			this.aelement.stopHover = () => {
+			this.aelement.stopHover = function() {
 				this.domelement.classList.remove(this.domelement.getAttribute("hover"));
 			};
 
@@ -362,22 +362,45 @@ class ContainerElement extends Element{
 		this.aelement.setAttribute("height", this.height);
 	}
 
+	/*
+	var background_image = element_style.getPropertyValue("background-image");
+	background_image = background_image.substring(background_image.lastIndexOf("(")+1,background_image.lastIndexOf(")"));
+	this.aelement.setAttribute("visible", "");
+	
+	if(transparent != background_color || background_image){
+		this.aelement.setAttribute("visible", true);
+
+		if(isUrl(background_image)){
+			log("background image:");
+			log(background_image);
+			this.aelement.setAttribute('material','src: ' + background_image);
+		}
+	*/
+
 	elementSpecificUpdate(element_style){
 		var background_color = element_style.getPropertyValue("background-color");
-		var background_image = element_style.getPropertyValue("background-image").slice(4, -1).replace(/"/g, "");
+		var background_image = element_style.getPropertyValue("background-image");
+		background_image = background_image.substring(background_image.lastIndexOf('(\"')+2,background_image.lastIndexOf('\")'));
+		if(background_image === "n")
+			background_image = false;
+
 		this.aelement.setAttribute("visible", "");
+	
 		if(transparent != background_color || background_image){
 			this.aelement.setAttribute("visible", true);
 
-			if(isUrl(background_image))
+			if(isUrl(background_image)){
+				log("background image:");
+				log(background_image);
+				this.aelement.setAttribute('material','');
 				this.aelement.setAttribute('material','src: ' + background_image);
+			}
 			else
 				this.aelement.setAttribute('color', background_color);
 
 			this.aelement.setAttribute("side","");
 			this.aelement.setAttribute("side","double");
-		}
-		else{
+		}else{
 			this.aelement.setAttribute("visible", false);
 		}
 	}
@@ -510,12 +533,12 @@ function AddNewElement(element){
 	if(element.innerHTML == '<div classname="t" onsubmit="t" onchange="t" onfocusin="t" style="margin: 0px; border: 0px; box-sizing: content-box; width: 1px; padding: 1px; display: block; zoom: 1;"><div style="width: 5px;"></div></div>')
 		return;
 
-	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT"){
+	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE"){
 		new_a_element = new ContainerElement(element,layer_depth);
 	}
 
 	//Text based elements
-    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
+    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || element.tagName == "SPAN" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
     	new_a_element = new TextWithBackgroundElement(element, layer_depth);
     
     //Images
@@ -769,4 +792,4 @@ function load(){
 }
 
 document.addEventListener("page_fully_loaded", load); 
-document.dispatchEvent(page_fully_loaded_event);
+//document.dispatchEvent(page_fully_loaded_event);

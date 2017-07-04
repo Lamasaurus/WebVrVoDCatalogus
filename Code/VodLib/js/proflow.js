@@ -16,7 +16,7 @@ function createCategory(category) {
 	addClass(section, "carouselActive");
 	section.innerHTML = "" +
 		"<header>" +
-		"\t<h1><span class=\"sectiontooltip\" data-tip=\"0 films\">" + category.name + "</span></h1>" +
+		"\t<span class=\"sectiontooltip\" data-tip=\"0 films\">" + category.name + "</span>" +
 		"\t<div class=\"pager\">" +
 		"\t\t<a href=\"#\" class=\"prev disabled\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\">previous</a>" +
 		"\t\t<a href=\"#\" class=\"next\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\">next</a>" +
@@ -39,11 +39,11 @@ function createArticle(film) {
 	addClass(article, "thumb");
 	article.innerHTML = "" +
 		"<a itemprop=\"url\" href=\"#\" onclick=\"openVodPopup(event); return false;\">" +
-		"\t<header>" +
+		/*"\t<header>" +
 		"\t\t<div class=\"titleWrap\">" +
 		"\t\t\t<h1><span itemprop=\"name\">" + film["title"] + "</span></h1>" +
 		"\t\t</div>" +
-		"\t</header>" +
+		"\t</header>" +*/
 		"\t<div class=\"main\">" +
 		"\t\t<div class=\"wrap\">" +
 		"\t\t\t<div class=\"wrap2\">" +
