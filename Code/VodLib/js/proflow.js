@@ -45,15 +45,7 @@ function createArticle(film) {
 		"\t\t</div>" +
 		"\t</header>" +*/
 		"\t<div class=\"main\">" +
-		"\t\t<div class=\"wrap\">" +
-		"\t\t\t<div class=\"wrap2\">" +
-		"\t\t\t\t<div class=\"image thumb\">" +
-		"\t\t\t\t\t<div class=\"graphic\">" +
 		"\t\t\t\t\t\t<img src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
-		"\t\t\t\t\t</div>" +
-		"\t\t\t\t</div>" +
-		"\t\t\t</div>" +
-		"\t\t</div>" +
 		"\t</div>" +
 		"</a>";
 
@@ -372,12 +364,19 @@ function moveCarousel(event, catId, direction) {
 	} else {
 		carouselArrowNext.className = "next";
 	}
-	carouselElt.style["transform"] = "translate(" + (-(new_start * articleWidth).toFixed(0)) + "px,0)";
 
-	if ( direction === 0 ) {
-		carouselElt.style["transition"] = "none";
-	} else {
-		carouselElt.style["transition"] = "all 0.5s ease-in-out";
+	let animation_style = document.getElementById("animations");
+	animation_style.innerHTML = "@keyframes translateanimation {\n"
+		+ "0% { transform: translate(" + (-(start * articleWidth).toFixed(0)) + "px,0px); }\n"
+    	+ "100% { transform: translate(" + (-(new_start * articleWidth).toFixed(0)) + "px,0px); }\n"
+		+ "}\n"
+		+ "\n.animate-carousel" + carouselElt.getAttribute("data-id") + "{ \nanimation: translateanimation 1s forwards; \n}";
+
+	carouselElt.classList.remove("animate-carousel" + carouselElt.getAttribute("data-id"));
+	if ( direction !== 0 ) {
+		void carouselElt.offsetWidth;
+		carouselElt.classList.add("animate-carousel" + carouselElt.getAttribute("data-id"));
+		carouselElt.style.transform = "translate(" + (-(new_start * articleWidth).toFixed(0)) + "px,0px)";
 	}
 	showFilms(catId);
 	if ( event ) {
@@ -402,7 +401,7 @@ function loadJSON(url) {
 	});
 }
 
-var loaded_categorys = 0, categoryCount = 0;;
+var loaded_categorys = 0, categoryCount = 0;
 function dispatchLoadedEvent(){
 	loaded_categorys++;
 
@@ -417,6 +416,10 @@ function init() {
 
 		let categoryContainer = document.getElementById("carouselContainer");
 		categoryCount = 0;
+
+		let styling = document.createElement("style");
+		styling.setAttribute("id","animations");
+		document.body.appendChild(styling);
 
 		for ( let categoryId in categories ) {
 			if ( categories.hasOwnProperty(categoryId) ) {
@@ -439,6 +442,7 @@ function init() {
 				sequence = categoryPromise;
 			}
 		}
+
 
 		
 		return sequence;

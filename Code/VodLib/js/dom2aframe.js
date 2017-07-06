@@ -8,11 +8,9 @@ var z_index = 0;
 //Width of the body
 var body_width;
 
-var update_all = true;
-
 var a_elements = new Array();
 
-var animation_fps = 999;
+var animation_fps = 30;
 
 //Indicates that something was dirty and all other elements should check if they changed
 var somethingdirty = false;
@@ -79,7 +77,7 @@ class Element{
 
         //Listenes for direct css changes
 		(new MutationObserver(this.updateDirt.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false, attributeOldValue : true });
-		(new MutationObserver(UpdateAll)).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false, attributeOldValue : true });
+		//(new MutationObserver(UpdateAll)).observe(this.domelement, { attributes: true, childList: false, characterData: true, subtree: false, attributeOldValue : true });
 
         //Listenes for css animations
         this.domelement.addEventListener("animationstart", this.startAnimation.bind(this));
@@ -161,12 +159,19 @@ class Element{
 			this.aelement.classList.add('clickable');
 	}
 
-    startAnimation(){
+    startAnimation(event){
+    	event.stopPropagation();
+    	log("Animation started");
+
         this.stopIntervall();
+        this.updateAnimation();
         this.interval = setInterval(this.updateAnimation.bind(this), 1000/animation_fps);
     }
 
-    stopAnimation(){
+    stopAnimation(event){
+    	event.stopPropagation();
+    	log("Animation stopt");
+
         this.stopIntervall();
         this.updateAnimation();
     }
@@ -177,8 +182,7 @@ class Element{
 
     //Update for one Animation frame
     updateAnimation(){
-        this.updateDirt();
-        UpdateAll.bind(this).call();
+        this.setSubtreeDirty();
     }
 
     setSubtreeDirty(){
@@ -192,6 +196,7 @@ class Element{
 
     setDirty(){
     	this.dirty = true;
+    	somethingdirty = true;
     }
 
     isDirty(){
@@ -218,7 +223,7 @@ class Element{
     }
 
     //Gets called on the object that invokes the whole update chain, which is garanteed to be dirty
-    updateDirt(mutation){
+    updateDirt(mutation, is_animating){
     	if(SetDragEvent(this) || !mutation)
     		return;
 
@@ -239,7 +244,6 @@ class Element{
 	        	this.setDirty();
 
 	        //this.update();
-	        somethingdirty = true;
 	    }
     }
 
@@ -362,21 +366,6 @@ class ContainerElement extends Element{
 		this.aelement.setAttribute("height", this.height);
 	}
 
-	/*
-	var background_image = element_style.getPropertyValue("background-image");
-	background_image = background_image.substring(background_image.lastIndexOf("(")+1,background_image.lastIndexOf(")"));
-	this.aelement.setAttribute("visible", "");
-	
-	if(transparent != background_color || background_image){
-		this.aelement.setAttribute("visible", true);
-
-		if(isUrl(background_image)){
-			log("background image:");
-			log(background_image);
-			this.aelement.setAttribute('material','src: ' + background_image);
-		}
-	*/
-
 	elementSpecificUpdate(element_style){
 		var background_color = element_style.getPropertyValue("background-color");
 		var background_image = element_style.getPropertyValue("background-image");
@@ -484,37 +473,26 @@ class TextWithBackgroundElement extends Element{
 	}
 }
 
-var grabbing = false, grab_init = false;
+var grabbing = false;
 //Check if the event is triggered because of a grab
 function SetDragEvent(element){
-	if(!(element instanceof ContainerElement)){
-		grabbing = false;
+	if(!(element instanceof ContainerElement))
 		return false;
-	}
 
 	var dom_element = element.getDomElement();
-	if(dom_element.tagName === "BODY" && dom_element.classList.contains("a-grabbing") && !grab_init){
+	if(dom_element.tagName === "BODY" && dom_element.classList.contains("a-grabbing") && !grabbing){
 		grabbing = true;
-		grab_init = true;
 		return true;
-	}else if(dom_element.tagName === "BODY" && !dom_element.classList.contains("a-grabbing") && grab_init){
-		grabbing = true;
-		grab_init = false;
+	}else if(dom_element.tagName === "BODY" && !dom_element.classList.contains("a-grabbing") && grabbing){
+		grabbing = false;
 		return true;
 	}
-
-	grabbing = false;
 	return false;
 }
 
-function UpdateAll(mutations){
+function UpdateAll(){
 	//Only update when we want to update everything and something is dirty
-    if(update_all && somethingdirty){
-
-        //Stop everything from updating when dragging
-        if(grabbing)
-            return;
-
+    if(somethingdirty){
         log("Updating all Elements");
 
     	for(var i = 0; i < a_elements.length; i++)
@@ -522,6 +500,8 @@ function UpdateAll(mutations){
 
         somethingdirty = false;
 	}
+
+	window.requestAnimationFrame(UpdateAll);
 }
 
 function AddNewElement(element){
@@ -607,19 +587,17 @@ function init(){
 		AddNewElement(items[i]);
 
 	//Observer to check for newly added or deleted DOM elements
-	var observer = new WebKitMutationObserver(function(mutations) {
+	var observer = new MutationObserver(function(mutations) {
 	    mutations.forEach(function(mutation) {
 	    	if(dynamic_add_elements){
 		        for(var i = 0; i < mutation.addedNodes.length; i++){
 		            AddNewElement(mutation.addedNodes[i]);
 		            somethingdirty = true;
-		            UpdateAll();
 		        }
 		    }
 	        for(var i = 0; i < mutation.removedNodes.length; i++){
 	            RemoveElement(mutation.removedNodes[i]);
 	            somethingdirty = true;
-	            UpdateAll();
 	        }
 	    })
 	});
@@ -690,10 +668,10 @@ function init(){
     video_element.SetScource("iwb");
 
     document.body.appendChild(a_scene);
+    window.requestAnimationFrame(UpdateAll);
 };
 
 function enterVr(){
-    UpdateAll();
     changing_style.innerHTML = invr_css;
 }
 
@@ -714,7 +692,7 @@ function checkKey(e) {
     //press L to toggle moving
     //press N to stop dynamicaly adding elements
     //press O to show convas
-    //press I to inspect (does not open inspector)
+    //press Ctrl + Alt + I to inspect
 
     switch(e.keyCode){
     case 65: //press E or A to go up and down. 
@@ -753,7 +731,7 @@ function checkKey(e) {
     		changing_style.innerHTML = invr_css;
     	break;
 
-    case 73: //press I to inspect (does not open inspector)
+    case 73: //press Ctrl + Alt + I to inspect
     	dynamic_add_elements = false;
     	changing_style.innerHTML = invr_css;
     	break;

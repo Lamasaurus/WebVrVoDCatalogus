@@ -3376,7 +3376,9 @@ footer .legal a {
   position: relative;
   padding-top: 147%;
 }
-.vod.thumb .main .thumb .graphic img {
+.vod.thumb .main img {
+  margin: 10px;
+  min-height: 100px;
   display: block;
   width: 100%;
   position: absolute;
