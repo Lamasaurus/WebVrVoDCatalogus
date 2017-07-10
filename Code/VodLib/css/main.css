@@ -10758,22 +10758,14 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
   outline: none;
 }
 .modList[data-pattern='swipe'] > header .pager .prev {
-  position: absolute;
-  top: 42px;
-  bottom: 18px;
-  left: -40px;
-  width: 0px;
-  padding-left: 35px;
   overflow: hidden;
 }
-.modList[data-pattern='swipe'] > header .pager .prev:after {
+.modList[data-pattern='swipe'] > header .pager .prev {
   left: 0;
   top: 50%;
   margin-top: -17px;
-  background: url(img/sprite.png) no-repeat;
-  background-position: -210px -140px;
+  background: url(img/carousel-prev-active.png) no-repeat;
   position: absolute;
-  content: " ";
   width: 35px;
   height: 34px;
 }
@@ -10784,22 +10776,14 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
   }
 }
 .modList[data-pattern='swipe'] > header .pager .next {
-  position: absolute;
-  top: 42px;
-  bottom: 18px;
-  right: -40px;
-  width: 0px;
-  padding-left: 35px;
   overflow: hidden;
 }
-.modList[data-pattern='swipe'] > header .pager .next:after {
+.modList[data-pattern='swipe'] > header .pager .next {
   right: 0;
   top: 50%;
   margin-top: -17px;
-  background: url(img/sprite.png) no-repeat;
-  background-position: -245px -140px;
+  background: url(img/carousel-next-active.png) no-repeat;
   position: absolute;
-  content: " ";
   width: 35px;
   height: 34px;
 }
@@ -10809,9 +10793,8 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
     background-size: 805px 385px;
   }
 }
-.modList[data-pattern='swipe'] > header .pager .prev:hover:after {
-  background: url(img/sprite.png) no-repeat;
-  background-position: -280px -315px;
+.modList[data-pattern='swipe'] > header .pager .prev:hover, .modList[data-pattern='swipe'] > header .pager .prevhover {
+  background: url(img/carousel-prev-hover.png) no-repeat;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (min-device-pixel-ratio: 2) {
   .modList[data-pattern='swipe'] > header .pager .prev:hover:after {
@@ -10819,9 +10802,8 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
     background-size: 805px 385px;
   }
 }
-.modList[data-pattern='swipe'] > header .pager .next:hover:after {
-  background: url(img/sprite.png) no-repeat;
-  background-position: -315px -315px;
+.modList[data-pattern='swipe'] > header .pager .next:hover,.modList[data-pattern='swipe'] > header .pager  .nexthover {
+  background: url(img/carousel-next-hover.png) no-repeat;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (min-device-pixel-ratio: 2) {
   .modList[data-pattern='swipe'] > header .pager .next:hover:after {
@@ -10829,9 +10811,8 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
     background-size: 805px 385px;
   }
 }
-.modList[data-pattern='swipe'] > header .pager .prev.disabled:after {
-  background: url(img/sprite.png) no-repeat;
-  background-position: -280px -280px;
+.modList[data-pattern='swipe'] > header .pager .prev.disabled {
+  background: url(img/carousel-prev-inactive.png) no-repeat;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (min-device-pixel-ratio: 2) {
   .modList[data-pattern='swipe'] > header .pager .prev.disabled:after {
@@ -10839,9 +10820,8 @@ section#ovrRecordBroadcasts > header .lnkDelete a {
     background-size: 805px 385px;
   }
 }
-.modList[data-pattern='swipe'] > header .pager .next.disabled:after {
-  background: url(img/sprite.png) no-repeat;
-  background-position: -315px -280px;
+.modList[data-pattern='swipe'] > header .pager .next.disabled {
+  background: url(img/carousel-next-inactive.png) no-repeat;
 }
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (min-device-pixel-ratio: 2) {
   .modList[data-pattern='swipe'] > header .pager .next.disabled:after {

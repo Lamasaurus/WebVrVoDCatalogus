@@ -17,14 +17,16 @@ function createCategory(category) {
 	section.innerHTML = "" +
 		"<header>" +
 		"\t<span class=\"sectiontooltip\" data-tip=\"0 films\">" + category.name + "</span>" +
-		"\t<div class=\"pager\">" +
-		"\t\t<a href=\"#\" class=\"prev disabled\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\">previous</a>" +
-		"\t\t<a href=\"#\" class=\"next\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\">next</a>" +
-		"\t</div>" +
 		"</header>" +
 		"<div style=\"width: 980px; height: 278px; overflow: hidden;\" class=\"main carouselMain\">" +
 		"\t<div style=\"height: 278px; transition: all 0s none;\" class=\"carouselWrapper\" data-id=\"" + category.id + "\"></div>" +
-		"</div>";
+		"</div>" +
+		"<header>" +
+		"\t<div class=\"pager\">" +
+		"\t\t<a href=\"#\" class=\"prev disabled\" hover=\"prevhover\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\"></a>" +
+		"\t\t<a href=\"#\" class=\"next\" hover=\"nexthover\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\"></a>" +
+		"\t</div>" +
+		"</header>";
 
 	return section;
 }
@@ -38,14 +40,14 @@ function createArticle(film) {
 	addClass(article, "vod");
 	addClass(article, "thumb");
 	article.innerHTML = "" +
-		"<a itemprop=\"url\" href=\"#\" onclick=\"openVodPopup(event); return false;\">" +
+		"<a itemprop=\"url\" href=\"#\">" +
 		/*"\t<header>" +
 		"\t\t<div class=\"titleWrap\">" +
 		"\t\t\t<h1><span itemprop=\"name\">" + film["title"] + "</span></h1>" +
 		"\t\t</div>" +
 		"\t</header>" +*/
 		"\t<div class=\"main\">" +
-		"\t\t\t\t\t\t<img src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
+		"\t\t\t\t\t\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + "); return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
 		"\t</div>" +
 		"</a>";
 
@@ -235,8 +237,7 @@ function closeOnEsc(event) {
 	}
 }
 
-function openVodPopup(evt) {
-	let vodId = evt.currentTarget.parentNode.dataset.vodId;
+function openVodPopup(vodId) {
 	console.log("open VOD, id=" + vodId);
 	addClass(document.getElementsByTagName("html")[0], "jPop");
 	let overlayVod = document.getElementById("ovrVOD");

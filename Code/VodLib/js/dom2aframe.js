@@ -31,9 +31,8 @@ var a_element_container
 //The element that will paly the video's
 var video_element;
 
-//The id for image assets
-var img_id = 0;
-var vid_id = 0;
+//The id for assets
+var asset_id = 0;
 var element_id = 0;
 
 //The depth at which elemnts start to get placed
@@ -379,10 +378,8 @@ class ContainerElement extends Element{
 			this.aelement.setAttribute("visible", true);
 
 			if(isUrl(background_image)){
-				log("background image:");
-				log(background_image);
 				this.aelement.setAttribute('material','');
-				this.aelement.setAttribute('material','src: ' + background_image);
+				this.aelement.setAttribute('material','alphaTest: 0.5; src: #' + GetAsset(background_image, "img"));
 			}
 			else
 				this.aelement.setAttribute('color', background_color);
@@ -395,19 +392,32 @@ class ContainerElement extends Element{
 	}
 }
 
+//Gives back the id of the asset or makes a new asset
+function GetAsset(path, type){
+	var assets = a_assets.getChildren();
+
+	for(var i = 0; i < assets.length; i++)
+		if(assets[i].getAttribute("src") === path)
+			return assets[i].getAttribute("id");
+
+	//Asset creation
+	var asset = document.createElement(type);
+	asset.setAttribute("src",path);
+    var id = "asset-" + asset_id++;
+    asset.setAttribute("id", id);
+    a_assets.appendChild(asset);
+
+    return id;
+}
+
 class ImageElement extends Element{
 	constructor(domelement, depth){
 		super(domelement, depth);
         this.depth = depth;
 
-		//Image asset creation
-		var asset = this.domelement.cloneNode(true);
-        var asset_id = "img-asset-" + img_id++;
-        asset.setAttribute("id",asset_id);
-        a_assets.appendChild(asset);
-
 		this.aelement = document.createElement("a-image");
-		this.aelement.setAttribute("src","#"+asset_id);
+		this.aelement.setAttribute("src","#"+GetAsset(this.domelement.getAttribute("src"),"img"));
+		this.aelement.setAttribute("material","alphaTest: 0.5");
 
 		//Initiation update
 		this.update();
@@ -432,6 +442,7 @@ class ImageElement extends Element{
 	}
 
 	elementSpecificUpdate(element_style){
+		this.aelement.setAttribute("src","#"+GetAsset(this.domelement.getAttribute("src"),"img"));
 	}
 }
 
@@ -443,7 +454,7 @@ class TextWithBackgroundElement extends Element{
 		this.aelement.setAttribute("side","double");
 
 		//Make separate container and text element
-		this.aplane = new ContainerElement(domelement, depth, true);
+		this.aplane = new ContainerElement(domelement, depth);
 		this.atext = new TextElement(domelement, depth - layer_difference, true);
 
 		//Because this element takes up 2 layers we increase the layer depth here
@@ -455,7 +466,7 @@ class TextWithBackgroundElement extends Element{
 
 		this.update();
 		this.setId();
-		this.addFunctionality();
+		//this.addFunctionality();
 	}
 
 	isDirty(){
@@ -546,6 +557,20 @@ function RemoveElement(removed_element){
 	}
 }
 
+function AddNewNestedElement(element){
+	AddNewElement(element);
+
+	log("Element added:");
+	log(element);
+
+	var children = element.childNodes;
+	if(children.length < 2)
+		return;
+
+	for(var i = 0; i < children.length; i++)
+		AddNewNestedElement(children[i]);
+}
+
 function init(){
     THREE.ImageUtils.crossOrigin = '';
 
@@ -591,7 +616,7 @@ function init(){
 	    mutations.forEach(function(mutation) {
 	    	if(dynamic_add_elements){
 		        for(var i = 0; i < mutation.addedNodes.length; i++){
-		            AddNewElement(mutation.addedNodes[i]);
+		            AddNewNestedElement(mutation.addedNodes[i]);
 		            somethingdirty = true;
 		        }
 		    }
