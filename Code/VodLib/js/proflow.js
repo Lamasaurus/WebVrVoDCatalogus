@@ -366,17 +366,23 @@ function moveCarousel(event, catId, direction) {
 		carouselArrowNext.className = "next";
 	}
 
+	//Get the style tag for putting animations in
 	let animation_style = document.getElementById("animations");
+	//Make a new animation that animates the element from its current position to the new position and create a class that uses this animation
 	animation_style.innerHTML = "@keyframes translateanimation {\n"
 		+ "0% { transform: translate(" + (-(start * articleWidth).toFixed(0)) + "px,0px); }\n"
     	+ "100% { transform: translate(" + (-(new_start * articleWidth).toFixed(0)) + "px,0px); }\n"
 		+ "}\n"
 		+ "\n.animate-carousel" + carouselElt.getAttribute("data-id") + "{ \nanimation: translateanimation 1s forwards; \n}";
 
+	//Remove the class from the elements class list if it already is there
 	carouselElt.classList.remove("animate-carousel" + carouselElt.getAttribute("data-id"));
 	if ( direction !== 0 ) {
+		//Lets the element review its class list so we can add the class again
 		void carouselElt.offsetWidth;
+		//Add the class again
 		carouselElt.classList.add("animate-carousel" + carouselElt.getAttribute("data-id"));
+		//Set the style of the element to the end postition of the animation, this makes that the position is kept even when the element doesn't have the class anymore
 		carouselElt.style.transform = "translate(" + (-(new_start * articleWidth).toFixed(0)) + "px,0px)";
 	}
 	showFilms(catId);

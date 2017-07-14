@@ -1,6 +1,5 @@
+//Loggs when true
 var debugging = true;
-
-var pixels_in_one_unit,pixel_text_size;
 
 //Standard z index
 var z_index = 0;
@@ -8,8 +7,10 @@ var z_index = 0;
 //Width of the body
 var body_width;
 
+//All the elements that represent dom elements
 var a_elements = new Array();
 
+//Amount of frames per second that animations should be updated with
 var animation_fps = 30;
 
 //Indicates that something was dirty and all other elements should check if they changed
@@ -20,6 +21,7 @@ var vrcss,changing_style;
 //CSS values
 var invr_css = ".a-canvas{display: default;} a-scene{width: 100%; height: 100%;} *{user-select: none;}", outvr_css = ".a-canvas{display: none;} a-scene{width: auto; height: auto;}";
 
+//Event that signals that we can start loading
 var page_fully_loaded_event = new Event('page_fully_loaded');
 
 //True if everything is initiated
@@ -31,7 +33,7 @@ var a_element_container
 //The element that will paly the video's
 var video_element;
 
-//The id for assets
+//The id for assets and elements
 var asset_id = 0;
 var element_id = 0;
 
@@ -41,8 +43,11 @@ var layer_depth = 0;
 //The section of a-frame where the image and video assets get placed
 var a_assets;
 
+//The style values for a transparent dom element
+//This can be different between browsers, that is why we should calculate it everytime we load the page
 var transparent;
 
+//We dynamicaly add elements that get added to the dom to our a-scene aswell, this should be turned off when using the A-frame inspector 
 var dynamic_add_elements = true;
 
 //The size of the CSS refference pixel times 2
@@ -56,6 +61,7 @@ function log(item){
 		console.log(item);
 }
 
+//Class to represent a position
 class Position{
     constructor(){
         this.top = 0;
@@ -68,7 +74,7 @@ class Position{
 class Element{
 	constructor(domelement, depth){
 		this.domelement = domelement;
-		//Make sure dom elements can tell theyr higher structure to update
+		//Make sure dom elements can tell theyr children to update
 		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
 		this.aelement = null;
 
@@ -92,16 +98,17 @@ class Element{
         this.dirty = true;
 	}
 
+	//Sets the id of the element
 	setId(){
 		this.id = element_id++;
 		this.aelement.setAttribute("id","generated_element_"+this.id);
 		this.aelement.domelement = this.domelement;
 	}
 
-	//Returns true if attribute existes and is copyed to the aframe element
+	//Returns true if attribute existes and the functionality can be used
 	copyAttribute(attr){
 		if(this.domelement.hasAttribute(attr)){
-			this.aelement.setAttribute(attr, "var generatedFunction = function(){" + this.domelement.getAttribute(attr) + ";}; generatedFunction.call(this.domelement);");
+			this.aelement[attr] = this.domelement[attr].bind(this.domelement);
 			return true;
 		}
 	}
@@ -117,39 +124,36 @@ class Element{
 		is_clickable = this.copyAttribute('onmouseup') || is_clickable;
 
 		//Video specific functionality
+
+		//The show-player attribute shows the media player when the element is clicked
 		if(this.domelement.hasAttribute("show-player")){
-			this.aelement.setAttribute("onclick", "showVideoPlayer(); " + this.aelement.getAttribute("onclick"));
+			this.aelement.onclick = function(){ showVideoPlayer(); if(this.domelement.onclick) this.domelement.onclick.call(this.domelement); }
 			is_clickable = true;
 		}
 
+		//The play-video attribute shows the media player with a new video, that is specified by the attribute, when the element is clicked
 		if(this.domelement.hasAttribute("play-video")){
-			//Video asset creation
-			var asset = document.createElement("video");
-
-			var asset_id = "vid-asset-" + vid_id++;
-
-	        asset.setAttribute("id",asset_id);
-	        asset.setAttribute("src",this.domelement.getAttribute("play-video"));
-	        asset.setAttribute("preload","auto");
-
-	        a_assets.appendChild(asset);
-
-			this.aelement.setAttribute("onclick", "showNewVideo('"+asset_id+"'); " + this.aelement.getAttribute("onclick"));
+			//Create video asset
+			var video_id = GetAsset(this.domelement.getAttribute("play-video"), "video");
+			this.aelement.onclick = function(){ showNewVideo(video_id); if(this.domelement.onclick) this.domelement.onclick.call(this.domelement); }
 			is_clickable = true;
 		}
 
+		//The hover attribute adds the class that is specified in the attribute to the element when the cursor enters it and removes it when the cursor leves
 		if(this.domelement.hasAttribute("hover")){
 
 			this.aelement.hover = function() {
+				//The class gets added to the dom element
 				this.domelement.classList.add(this.domelement.getAttribute("hover"));
 			};
 
 			this.aelement.stopHover = function() {
+				//The class gets removed from the dom element
 				this.domelement.classList.remove(this.domelement.getAttribute("hover"));
 			};
 
-			this.aelement.setAttribute("onmouseenter",  "this.hover(); " + this.aelement.getAttribute("onmouseenter"));
-			this.aelement.setAttribute("onmouseleave",  "this.stopHover(); " + this.aelement.getAttribute("onmouseleave"));
+			this.aelement.onmouseenter = ()=>{ this.aelement.hover(); if(this.domelement.onmouseenter) this.domelement.onmouseenter.call(this.domelement); };
+			this.aelement.onmouseleave = ()=>{ this.aelement.stopHover(); if(this.domelement.onmouseleave) this.domelement.onmouseleave.call(this.domelement); };
 
 			is_clickable = true;
 		}
@@ -158,7 +162,9 @@ class Element{
 			this.aelement.classList.add('clickable');
 	}
 
+	//At the start of an animation, we want to start an interval to update this element every so often
     startAnimation(event){
+    	//Stop the event from propagating to parent elements
     	event.stopPropagation();
     	log("Animation started");
 
@@ -167,7 +173,9 @@ class Element{
         this.interval = setInterval(this.updateAnimation.bind(this), 1000/animation_fps);
     }
 
+    //Stop the animation and update one last time
     stopAnimation(event){
+    	//Stop the event from propagating to parent elements
     	event.stopPropagation();
     	log("Animation stopt");
 
@@ -175,6 +183,7 @@ class Element{
         this.updateAnimation();
     }
 
+    //Stop the interval to update for an animation
     stopIntervall(){
         clearInterval(this.interval);            
     }
@@ -184,6 +193,7 @@ class Element{
         this.setSubtreeDirty();
     }
 
+    //Flaggs itself as dirty and recursively sets its direct children dirty
     setSubtreeDirty(){
     	this.setDirty();
 
@@ -193,6 +203,7 @@ class Element{
 				children[i].setSubtreeDirty();
     }
 
+    //Sets the element dirty and flaggs that there is something dirty
     setDirty(){
     	this.dirty = true;
     	somethingdirty = true;
@@ -202,14 +213,17 @@ class Element{
     	return this.dirty;
     }
 
+    //Return the A-frame element
 	getAElement(){
 		return this.aelement;
 	}
 
+	//Return the dom element 
 	getDomElement(){
 		return this.domelement;
 	}
 
+	//Opdate to the new position
     updatePosition(position){
         this.position.top = position.top;
         this.position.bottom = position.bottom;
@@ -217,11 +231,12 @@ class Element{
         this.position.right = position.right;
     }
 
+    //Compares the position with its own position, returns true if they are the same
     comparePosition(position){
         return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
     }
 
-    //Gets called on the object that invokes the whole update chain, which is garanteed to be dirty
+    //Checks if the element should be flagged as dirty and if its children also should be flagged
     updateDirt(mutation, is_animating){
     	if(SetDragEvent(this) || !mutation)
     		return;
@@ -246,6 +261,7 @@ class Element{
 	    }
     }
 
+    //Generic update function
     update(){
         //get new position
         var position = this.domelement.getBoundingClientRect();
@@ -254,14 +270,20 @@ class Element{
         if(this.comparePosition(position) && !this.isDirty())
             return;
 
+        //Check if the postition was updated
         if(!this.comparePosition(position)){
-	        //Cash the last position
+	        //Cash the new position
 	        this.updatePosition(position);
+	        //Let the element update its own position
         	this.elementUpdatePosition();
         }
 
+        //Check if the element was flagged as dirty, this only happens when it's style may have changed
         if(this.isDirty){
+        	//Get the style of the elemtent, this is a heavy operation
 	        var element_style = window.getComputedStyle(this.domelement);
+
+	        //Let the element update its own style
 	        this.elementSpecificUpdate(element_style);
 
 	        //Set the opacity of the element
@@ -281,11 +303,13 @@ function isNotHidden(el, style){
 	return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none");
 }
 
+//Check if string s is a url
 function isUrl(s) {
    var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
    return regexp.test(s);
 }
 
+//Strips all tags from a string
 function stripText(html){
     var tmp = document.createElement("DIV");
     tmp.innerHTML = html;
@@ -306,27 +330,31 @@ class TextElement extends Element{
 	}
 
 	elementUpdatePosition(){
-		//Calc the y possition
-        var y = -((this.position.bottom - this.position.top) / 2 + this.position.top);
-        this.aelement.setAttribute("position",{x: this.position.left/pixels_per_meter, y: y/pixels_per_meter, z: z_index + this.depth});
+		//Calc the x and y possition
+        var y = -((this.position.bottom - this.position.top) / 2 + this.position.top)/pixels_per_meter;
+        var x = this.position.left/pixels_per_meter;
+
+        this.aelement.setAttribute("position",{x: x, y: y, z: z_index + this.depth});
 	}
 
 	elementSpecificUpdate(element_style){
-        //Style attributes
+        //Get the text value of the element
         this.aelement.setAttribute("text","value: " + stripText(this.domelement.innerHTML) + ";");
 
-        //We have to reset the color to a void value.
         if(transparent != element_style.getPropertyValue("color")){
 			this.aelement.setAttribute('color', "");
 	        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
+
 	        this.aelement.setAttribute("visible", true);
+
 	        this.aelement.setAttribute("side","");
 	        this.aelement.setAttribute("side","double");
-	    }else{
+	    }else{ //If the element is transparent we just don't show it
 	    	this.aelement.setAttribute("visible", false);
 	    }
 
 		this.aelement.setAttribute("width",0);
+		//The width of the text element determins the size of the text, so we have to convert font-size to width
         var width = (1/pixels_per_meter * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
         if(width != this.aelement.getAttribute("width"))
         	this.aelement.setAttribute("width",width);
@@ -354,12 +382,15 @@ class ContainerElement extends Element{
 		this.width = (this.position.right - this.position.left)/pixels_per_meter;
 		this.height = (this.position.bottom - this.position.top)/pixels_per_meter;
 
+		//Save the with of the body, this is used to calculate the camera position
 		if(this.domelement.tagName == "BODY")
 			body_width = this.width;
 
+		//Calculate y and x position
 		var y = -this.position.top/pixels_per_meter - this.height/2;
+		var x = this.position.left/pixels_per_meter + this.width/2;
 
-		this.aelement.setAttribute('position', {x: this.position.left/pixels_per_meter + this.width/2, y: y, z: z_index + this.depth});
+		this.aelement.setAttribute('position', {x: x, y: y, z: z_index + this.depth});
 
 		this.aelement.setAttribute("width", this.width);
 		this.aelement.setAttribute("height", this.height);
@@ -367,26 +398,30 @@ class ContainerElement extends Element{
 
 	elementSpecificUpdate(element_style){
 		var background_color = element_style.getPropertyValue("background-color");
+		//Get the background image
 		var background_image = element_style.getPropertyValue("background-image");
+		//Juse a regex to extract the url if it is there
 		background_image = background_image.substring(background_image.lastIndexOf('(\"')+2,background_image.lastIndexOf('\")'));
+		//If the background image is just "n" it means that there  was none
 		if(background_image === "n")
 			background_image = false;
 
 		this.aelement.setAttribute("visible", "");
 	
-		if(transparent != background_color || background_image){
+		if(transparent != background_color || background_image){ //Check if the element is not transparent or has a background image
 			this.aelement.setAttribute("visible", true);
 
-			if(isUrl(background_image)){
+			if(isUrl(background_image)){//Check if the path to the background image is a legitimate url
 				this.aelement.setAttribute('material','');
+				//Set the source to the right asset id and alphaTest on 0.5, this makes that if a PNG uses alpha, that alpha is respected and not just white
 				this.aelement.setAttribute('material','alphaTest: 0.5; src: #' + GetAsset(background_image, "img"));
-			}
-			else
+			} else //If the background just is a color
 				this.aelement.setAttribute('color', background_color);
 
+			//Set double sided so we can look at the element from behind
 			this.aelement.setAttribute("side","");
 			this.aelement.setAttribute("side","double");
-		}else{
+		}else{ //If the element is transparent we just don't show it
 			this.aelement.setAttribute("visible", false);
 		}
 	}
@@ -395,14 +430,15 @@ class ContainerElement extends Element{
 //Gives back the id of the asset or makes a new asset
 function GetAsset(path, type){
 	var assets = a_assets.getChildren();
-
+	//Check there already is an asset entry for this path
 	for(var i = 0; i < assets.length; i++)
 		if(assets[i].getAttribute("src") === path)
 			return assets[i].getAttribute("id");
 
-	//Asset creation
+	//Create a new asset entry if it did not exist yet
 	var asset = document.createElement(type);
 	asset.setAttribute("src",path);
+	//Asset id
     var id = "asset-" + asset_id++;
     asset.setAttribute("id", id);
     a_assets.appendChild(asset);
@@ -410,13 +446,16 @@ function GetAsset(path, type){
     return id;
 }
 
+//Image elements represent img dom elements
 class ImageElement extends Element{
 	constructor(domelement, depth){
 		super(domelement, depth);
         this.depth = depth;
 
 		this.aelement = document.createElement("a-image");
+		//Set the source of the element, this is the id  of the image element in the a-asset tag
 		this.aelement.setAttribute("src","#"+GetAsset(this.domelement.getAttribute("src"),"img"));
+		//Set alphaTest on 0.5, this makes that if a PNG uses alpha, that alpha is respected and not just white
 		this.aelement.setAttribute("material","alphaTest: 0.5");
 
 		//Initiation update
@@ -430,15 +469,19 @@ class ImageElement extends Element{
 	}
 
 	elementUpdatePosition(){
+		//Calc with and height of the element
 		var width = (this.position.right - this.position.left)/pixels_per_meter;
 		var height = (this.position.bottom - this.position.top)/pixels_per_meter;
 
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);
 
+		//Calculate the y position
 		var y = -this.position.top/pixels_per_meter - height/2;
+		//Calculate the x position
+		var x = this.position.left/pixels_per_meter + width/2;
 
-		this.aelement.setAttribute('position', {x: this.position.left/pixels_per_meter + width/2, y: y, z: z_index + this.depth});
+		this.aelement.setAttribute('position', {x: x, y: y, z: z_index + this.depth});
 	}
 
 	elementSpecificUpdate(element_style){
@@ -446,6 +489,7 @@ class ImageElement extends Element{
 	}
 }
 
+//Text with background represents every element that contains pure text
 class TextWithBackgroundElement extends Element{
 	constructor(domelement, depth){
 		super(domelement, depth);
@@ -469,6 +513,7 @@ class TextWithBackgroundElement extends Element{
 		//this.addFunctionality();
 	}
 
+	//Text with background is dirty when it or its children is dirty
 	isDirty(){
 		return this.aplane.isDirty() || this.atext.isDirty() || this.isdirty;
 	}
@@ -487,22 +532,24 @@ class TextWithBackgroundElement extends Element{
 var grabbing = false;
 //Check if the event is triggered because of a grab
 function SetDragEvent(element){
+	//Only the body can be grabed, this is a container element
 	if(!(element instanceof ContainerElement))
 		return false;
 
 	var dom_element = element.getDomElement();
-	if(dom_element.tagName === "BODY" && dom_element.classList.contains("a-grabbing") && !grabbing){
+	if(dom_element.tagName === "BODY" && dom_element.classList.contains("a-grabbing") && !grabbing){ //If we are not grabbing and the class a-grabbing appears in the body we know we started grabbing
 		grabbing = true;
 		return true;
-	}else if(dom_element.tagName === "BODY" && !dom_element.classList.contains("a-grabbing") && grabbing){
+	}else if(dom_element.tagName === "BODY" && !dom_element.classList.contains("a-grabbing") && grabbing){ //If we are grabbing and the a-grabbing class is gone, we know it is over, but we still have ignore the event
 		grabbing = false;
 		return true;
 	}
 	return false;
 }
 
+//Looks at all the elements and updates them if they are dirty
 function UpdateAll(){
-	//Only update when we want to update everything and something is dirty
+	//Only update when something is dirty
     if(somethingdirty){
         log("Updating all Elements");
 
@@ -512,6 +559,7 @@ function UpdateAll(){
         somethingdirty = false;
 	}
 
+	//Loop back
 	window.requestAnimationFrame(UpdateAll);
 }
 
@@ -524,9 +572,9 @@ function AddNewElement(element){
 	if(element.innerHTML == '<div classname="t" onsubmit="t" onchange="t" onfocusin="t" style="margin: 0px; border: 0px; box-sizing: content-box; width: 1px; padding: 1px; display: block; zoom: 1;"><div style="width: 5px;"></div></div>')
 		return;
 
-	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE"){
+	//Container element
+	if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE")
 		new_a_element = new ContainerElement(element,layer_depth);
-	}
 
 	//Text based elements
     if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || element.tagName == "SPAN" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1]))
@@ -545,6 +593,7 @@ function AddNewElement(element){
     }
 }
 
+//Seeks and removes an element
 function RemoveElement(removed_element){
 	for(var i = 0; i < a_elements.length; i++){
 		if(a_elements[i].getDomElement() == removed_element){
@@ -557,11 +606,9 @@ function RemoveElement(removed_element){
 	}
 }
 
+//Adds the element and then recursively calls this function on its direct children
 function AddNewNestedElement(element){
 	AddNewElement(element);
-
-	log("Element added:");
-	log(element);
 
 	var children = element.childNodes;
 	if(children.length < 2)
@@ -574,13 +621,6 @@ function AddNewNestedElement(element){
 function init(){
     THREE.ImageUtils.crossOrigin = '';
 
-	items = new Array(document.body);
-	var doc_items = document.body.getElementsByTagName("*");
-
-	for(var i = 0; i < doc_items.length; i++)
-		items.push(doc_items[i]);
-
-
 	a_scene = document.createElement("a-scene");
 	a_scene.setAttribute("embedded");
 
@@ -591,7 +631,7 @@ function init(){
 
     //Assets
     a_assets = document.createElement("a-assets");
-    //add demo video to assets
+    //Add demo video to assets
     a_assets.innerHTML = '<video id="iwb" src="video/city-4096-mp4-30fps-x264-ffmpeg.mp4" preload="auto"></video>';
     a_scene.appendChild(a_assets);
 
@@ -600,12 +640,21 @@ function init(){
     a_element_container.setAttribute("id", "aElementContainer");
     a_scene.appendChild(a_element_container);
 
-    //Getting the value for this browser that means transparent
+    //Getting the value for this browser that means transparent to know when an element is transparent
     var trans_element = document.createElement("div");
 	trans_element.setAttribute("style", "background:none;display:none;")
+	//Add the element to the body because only then we can caluculate the style
     document.body.appendChild(trans_element);
 	transparent = window.getComputedStyle(trans_element).getPropertyValue("background-color");
+	//Remove it again
 	document.body.removeChild(trans_element);
+
+	//Get all elements that exist in the body
+	items = new Array(document.body);
+	var doc_items = document.body.getElementsByTagName("*");
+
+	for(var i = 0; i < doc_items.length; i++)
+		items.push(doc_items[i]);
 
     //Transcode every element in the page
 	for (i = 0; i < items.length; i++)
@@ -650,35 +699,38 @@ function init(){
 	cursor.setAttribute("geometry", "primitive: ring; radiusInner: 0.0005; radiusOuter: 0.001")
 	cursor.setAttribute("raycaster","objects: .clickable; far: 90;")
 	camera.appendChild(cursor);
+	a_scene.appendChild(camera);
 
-	//Cursor animations
-	/*animation1 = document.createElement("a-animation");
-	animation1.setAttribute("begin","click");
-	animation1.setAttribute("easing", "ease-in");
-    animation1.setAttribute("dur", "150");
-	animation1.setAttribute("attribute", "scale");
-	animation1.setAttribute("fill", "backwards");
-	animation1.setAttribute("from", "0.1 0.1 0.1");
-	animation1.setAttribute("to", "1 1 1");
-    animation1.setAttribute("repeat", "1");
-	cursor.appendChild(animation1);
+	//Cursor animations, triggers an animation and thus updateall. Thats why it is in comments
+	/*click_animation = document.createElement("a-animation");
+	click_animation.setAttribute("begin","click");
+	click_animation.setAttribute("easing", "ease-in");
+    click_animation.setAttribute("dur", "150");
+	click_animation.setAttribute("attribute", "scale");
+	click_animation.setAttribute("fill", "backwards");
+	click_animation.setAttribute("from", "0.1 0.1 0.1");
+	click_animation.setAttribute("to", "1 1 1");
+    click_animation.setAttribute("repeat", "1");
+	cursor.appendChild(click_animation);
 
-	animation2 = document.createElement("a-animation");
-	animation2.setAttribute("begin","cursor-fusing");
-	animation2.setAttribute("easing", "ease-in");
-    animation2.setAttribute("dur", "150");
-	animation2.setAttribute("attribute", "scale");
-    animation2.setAttribute("direction", "alternate");
-	animation2.setAttribute("fill", "forwards");
-	animation2.setAttribute("from", "1 1 1");
-	animation2.setAttribute("to", "0.1 0.1 0.1");
-    animation2.setAttribute("repeat", "1");
-	cursor.appendChild(animation2);*/
+	fuse_animation = document.createElement("a-animation");
+	fuse_animation.setAttribute("begin","cursor-fusing");
+	fuse_animation.setAttribute("easing", "ease-in");
+    fuse_animation.setAttribute("dur", "150");
+	fuse_animation.setAttribute("attribute", "scale");
+    fuse_animation.setAttribute("direction", "alternate");
+	fuse_animation.setAttribute("fill", "forwards");
+	fuse_animation.setAttribute("from", "1 1 1");
+	fuse_animation.setAttribute("to", "0.1 0.1 0.1");
+    fuse_animation.setAttribute("repeat", "1");
+	cursor.appendChild(fuse_animation);*/
 
-    //Inject css to get the VR button fixed
+    //Inject css to get the VR button fixed and the a-scene on top of everything
     vrcss = document.createElement('style');
     vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
     document.body.appendChild(vrcss);
+
+    //Style that changes when in vr
     changing_style = document.createElement('style');
     changing_style.innerHTML = outvr_css;
     document.body.appendChild(changing_style);
@@ -686,13 +738,20 @@ function init(){
     //a_scene.setAttribute("stats", true);
     a_scene.addEventListener("enter-vr",enterVr);
     a_scene.addEventListener("exit-vr",exitVr);
-	a_scene.appendChild(camera);
 
+	//Controller support
+	var controller_support = document.createElement("a-entity");
+	controller_support.setAttribute("laser-controls");
+	a_scene.appendChild(controller_support);
+
+	//Create the video bundle
 	video_element = new VideoElement(body_width/2 + " " + -body_width/4 + " " + ((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585);
     a_scene.appendChild(video_element.GetElement());
     video_element.SetScource("iwb");
 
     document.body.appendChild(a_scene);
+
+    //Start render loop
     window.requestAnimationFrame(UpdateAll);
 };
 
@@ -749,7 +808,7 @@ function checkKey(e) {
     	dynamic_add_elements = !dynamic_add_elements;
     	break;
 
-    case 79: //press O to show convas
+    case 79: //press O to show convas. This is done by changing the style of the canvas and a-scene
     	if(changing_style.innerHTML == invr_css)
     		changing_style.innerHTML = outvr_css;
     	else
@@ -763,30 +822,36 @@ function checkKey(e) {
     }
 }
 
+//Switches to a new video source and then shows the player
 function showNewVideo(id){
 	video_element.SetScource(id);
 	showVideoPlayer();
 }
 
+//Toggle the media player
 function showVideoPlayer(){
 	var v_element_visibility = video_element.IsVisible();
+
     video_element.SetVisiblity(!v_element_visibility);
     a_element_container.setAttribute("visible", v_element_visibility);
 
     //Set position of the elements away from the clickable part of the world
     var position = a_element_container.getAttribute("position");
     if(v_element_visibility){
-    	position = {x : position.x, y : position.y+500, z : position.z};
+    	position = {x : position.x, y : position.y+1000, z : position.z};
     	cursor.setAttribute("raycaster","objects: .clickable; far: 90;");
     }else{
-		position = {x : position.x, y : position.y-500, z : position.z};
+		position = {x : position.x, y : position.y-1000, z : position.z};
 		cursor.setAttribute("raycaster","objects:; far: 90;");
+
     }
+
+    //Set the position
     a_element_container.setAttribute("position", "");
     a_element_container.setAttribute("position", position);
-
 }
 
+//Function to start loading the a-scene
 function load(){
     if(!init_started){
         init_started = true;
