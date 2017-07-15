@@ -413,7 +413,7 @@ function dispatchLoadedEvent(){
 	loaded_categorys++;
 
 	if(loaded_categorys >= categoryCount)
-		document.dispatchEvent(page_fully_loaded_event);
+		document.dispatchEvent(new Event('page_fully_loaded'));
 }
 
 function init() {

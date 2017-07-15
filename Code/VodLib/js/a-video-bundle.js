@@ -110,10 +110,10 @@ class VideoElement{
 		home_button.setAttribute("src","icon/home.png");
 		home_button.setAttribute("height","0.25");
 		home_button.setAttribute("width","0.25");
-		home_button.setAttribute("onclick","showVideoPlayer();");
+		home_button.onclick = function(){dom2aframe.showVideoPlayer();};
 		home_button.setAttribute("position", {x:0.7, y:0, z:0});
 		this.vidcontrol.appendChild(home_button);
-		
+
 		this.video_element.appendChild(this.vidcontrol);
 
 	    this.hassrc = true;
