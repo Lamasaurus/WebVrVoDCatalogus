@@ -11,13 +11,26 @@ class Position{
         this.bottom = 0;
         this.left = 0;
         this.right = 0;
+
+        this.z = 0;
+    }
+
+    init(top, bottom, left, right, z){
+    	this.top = top;
+    	this.bottom = bottom;
+        this.left = left;
+        this.right = right;
+
+        this.z = z;
     }
 }
 
 //Basis of an element
 class Element{
-	constructor(domelement, depth){
+	constructor(domelement, depth, has_separated_parent){
 		this.domelement = domelement;
+		this.has_separated_parent = has_separated_parent;
+		this.is_separate = domelement.hasAttribute("separate");
 		//Make sure dom elements can tell theyr children to update
 		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
 		this.aelement = null;
@@ -168,19 +181,6 @@ class Element{
 		return this.domelement;
 	}
 
-	//Update to the new position
-    updatePosition(position){
-        this.position.top = position.top;
-        this.position.bottom = position.bottom;
-        this.position.left = position.left;
-        this.position.right = position.right;
-    }
-
-    //Compares the position with its own position, returns true if they are the same
-    comparePosition(position){
-        return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
-    }
-
 	//Check if the event is triggered because of a grab
 	SetDragEvent(element){
 		//Only the body can be grabed, this is a container element
@@ -228,10 +228,65 @@ class Element{
 		return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none");
 	}
 
+	//Compares the position with its own position, returns true if they are the same
+    comparePosition(position){
+        return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
+    }
+
+	//Update to the new position
+    updatePosition(position){
+    	if(this.is_separate)
+    		this.position = position;
+    	else{
+	        this.position.top = position.top;
+	        this.position.bottom = position.bottom;
+	        this.position.left = position.left;
+	        this.position.right = position.right;
+	    }
+
+        this.domelement.vr_position = this.position;
+    }
+
+	//Calc the position of the element when separate 
+	getPosition(){
+		var position = this.domelement.getBoundingClientRect();
+		if(this.is_separate){
+			var new_position = new Position();
+			var separate_position = this.domelement.getAttribute("separate").split(" ");
+
+			new_position.left = parseFloat(separate_position[0]) * pixels_per_meter;
+			new_position.right = position.right - position.left + new_position.left;
+			new_position.top = parseFloat(separate_position[1]) * pixels_per_meter;
+			new_position.bottom = position.bottom - position.top + new_position.top;
+			new_position.z = parseFloat(separate_position[2]);
+
+			log("Separate position:");
+			log(new_position);
+
+			return new_position;
+		}else if(this.has_separated_parent){
+			var new_position = new Position();
+			var parent_vr_position = this.domelement.parentElement.vr_position;
+			var parent_page_position = this.domelement.getBoundingClientRect();
+
+			new_position.left = position.left - parent_page_position.left + parent_vr_position.left;
+			new_position.right = position.right - position.left + new_position.left;
+			new_position.top = position.right - parent_page_position.right + parent_vr_position.right;
+			new_position.bottom = position.bottom - position.top + new_position.top;
+			new_position.z = parent_vr_position.z;
+
+			log("Separate parent position:");
+			log(new_position);
+
+			return new_position;
+		}else
+			return position;
+	}
+
     //Generic update function
     update(){
         //get new position
-        var position = this.domelement.getBoundingClientRect();
+        var position = this.getPosition();
 
         //Check if something changed since last time, else we just stop the update
         if(this.comparePosition(position) && !this.isDirty())
@@ -266,8 +321,8 @@ class Element{
 }
 
 class TextElement extends Element{
-	constructor(domelement, depth, dontAddFunc){
-		super(domelement, depth);
+	constructor(domelement, depth, has_separated_parent, dontAddFunc){
+		super(domelement, depth, has_separated_parent);
 
 		this.aelement = document.createElement("a-text");
 		this.update();
@@ -283,7 +338,7 @@ class TextElement extends Element{
         var y = -((this.position.bottom - this.position.top) / 2 + this.position.top)/pixels_per_meter;
         var x = this.position.left/pixels_per_meter;
 
-        this.aelement.setAttribute("position",{x: x, y: y, z: this.depth});
+        this.aelement.setAttribute("position",{x: x, y: y, z: this.depth + this.position.z});
 	}
 
 	//Strips all tags from a string
@@ -322,8 +377,8 @@ class TextElement extends Element{
 }
 
 class ContainerElement extends Element{
-	constructor(domelement, depth, dontAddFunc){
-		super(domelement, depth);
+	constructor(domelement, depth, has_separated_parent, dontAddFunc){
+		super(domelement, depth, has_separated_parent);
 
 		this.aelement = document.createElement("a-plane");
 		this.update();
@@ -342,7 +397,7 @@ class ContainerElement extends Element{
 		var y = -this.position.top/pixels_per_meter - this.height/2;
 		var x = this.position.left/pixels_per_meter + this.width/2;
 
-		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth});
+		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth + this.position.z});
 
 		this.aelement.setAttribute("width", this.width);
 		this.aelement.setAttribute("height", this.height);
@@ -387,8 +442,8 @@ class ContainerElement extends Element{
 
 //Image elements represent img dom elements
 class ImageElement extends Element{
-	constructor(domelement, depth){
-		super(domelement, depth);
+	constructor(domelement, depth, has_separated_parent){
+		super(domelement, depth, has_separated_parent);
         this.depth = depth;
 
 		this.aelement = document.createElement("a-image");
@@ -416,7 +471,7 @@ class ImageElement extends Element{
 		//Calculate the x position
 		var x = this.position.left/pixels_per_meter + width/2;
 
-		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth});
+		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth + this.position.z});
 	}
 
 	elementSpecificUpdate(element_style){
@@ -426,15 +481,15 @@ class ImageElement extends Element{
 
 //Text with background represents every element that contains pure text
 class TextWithBackgroundElement extends Element{
-	constructor(domelement, depth){
-		super(domelement, depth);
+	constructor(domelement, depth, has_separated_parent){
+		super(domelement, depth, has_separated_parent);
 
 		this.aelement = document.createElement("a-entity");
 		this.aelement.setAttribute("side","double");
 
 		//Make separate container and text element
-		this.aplane = new ContainerElement(domelement, depth);
-		this.atext = new TextElement(domelement, depth - layer_difference, true);
+		this.aplane = new ContainerElement(domelement, depth, has_separated_parent);
+		this.atext = new TextElement(domelement, depth - layer_difference, has_separated_parent, true);
 
 		//Add container and text to this entity
 		this.aelement.appendChild(this.aplane.getAElement());

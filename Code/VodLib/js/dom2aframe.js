@@ -58,8 +58,8 @@ class Dom2Aframe{
 		this.initVideoElement(body_width);
 		this.initSky();
 
-	    if(debugging)
-	    	this.a_scene.setAttribute("stats", true);
+	    /*if(debugging)
+	    	this.a_scene.setAttribute("stats", true);*/
 
 	    //Append the a-scene to the body
 	    document.body.appendChild(this.a_scene);
@@ -142,29 +142,38 @@ class Dom2Aframe{
 		window.requestAnimationFrame(this.UpdateAll.bind(this));
 	}
 
-	AddNewElement(element){
+	AddNewElement(element, has_separated_parent){
 		log("New element:")
 		log(element);
 		var new_a_element = null;
+
+		if(element.nodeName == "#text")
+			return;
 
 		//Some random element gets spawned and deleted immediately after, I don't see where it comes from or what its purpose is, but it gives errors. Now they don't get added
 		if(element.innerHTML == '<div classname="t" onsubmit="t" onchange="t" onfocusin="t" style="margin: 0px; border: 0px; box-sizing: content-box; width: 1px; padding: 1px; display: block; zoom: 1;"><div style="width: 5px;"></div></div>')
 			return;
 
+		//If an element is separate, the children should be separate to
+		if(element.hasAttribute("separate") && !has_separated_parent){
+			this.AddNewNestedElement(element, true);
+			return;
+		}
+
 		//Container element
 		if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE")
-			new_a_element = new ContainerElement(element,this.layer_depth);
+			new_a_element = new ContainerElement(element,this.layer_depth, has_separated_parent);
 
 		//Text based elements
 	    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || element.tagName == "SPAN" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){
-	    	new_a_element = new TextWithBackgroundElement(element, this.layer_depth);
+	    	new_a_element = new TextWithBackgroundElement(element, this.layer_depth, has_separated_parent);
 	    	//Because this element takes up 2 layers we increase the layer depth here
 			this.layer_depth += layer_difference;
 	    }
 	    
 	    //Images
 	    if(element.tagName == "IMG")
-	      new_a_element = new ImageElement(element, this.layer_depth);
+	      new_a_element = new ImageElement(element, this.layer_depth, has_separated_parent);
 
 	    //Push the element in the array of all elements
 	    if(new_a_element != null){
@@ -173,6 +182,15 @@ class Dom2Aframe{
 
 	    	this.layer_depth += layer_difference;
 	    }
+	}
+
+	//Adds the element and then recursively calls this function on its direct children
+	AddNewNestedElement(element, is_separate){
+		this.AddNewElement(element, is_separate);
+
+		var children = element.childNodes;
+		for(var i = 0; i < children.length; i++)
+			this.AddNewNestedElement(children[i], is_separate);
 	}
 
 	//Seeks and removes an element
@@ -188,23 +206,11 @@ class Dom2Aframe{
 		}
 	}
 
-	//Adds the element and then recursively calls this function on its direct children
-	AddNewNestedElement(element){
-		this.AddNewElement(element);
-
-		var children = element.childNodes;
-		if(children.length < 2)
-			return;
-
-		for(var i = 0; i < children.length; i++)
-			this.AddNewNestedElement(children[i]);
-	}
-
 	HandleRemoveAddMutation(mutations) {
 	    mutations.forEach(function(mutation) {
 	    	if(dom2aframe.dynamic_add_elements){
 		        for(var i = 0; i < mutation.addedNodes.length; i++){
-		            dom2aframe.AddNewNestedElement(mutation.addedNodes[i]);
+		            dom2aframe.AddNewNestedElement(mutation.addedNodes[i], false);
 		            dom2aframe.somethingdirty = true;
 		        }
 		    }
@@ -334,7 +340,7 @@ function load(){
 
         dom2aframe = new Dom2Aframe();
         dom2aframe.createAllElements();
-        
+
         document.onkeydown = dom2aframe.checkKey.bind(dom2aframe);
     }
 }
