@@ -8,20 +8,12 @@ var element_id = 0;
 class Position{
     constructor(){
         this.top = 0;
-        this.bottom = 0;
         this.left = 0;
-        this.right = 0;
+
+        this.width = 0;
+        this.height = 0;
 
         this.z = 0;
-    }
-
-    init(top, bottom, left, right, z){
-    	this.top = top;
-    	this.bottom = bottom;
-        this.left = left;
-        this.right = right;
-
-        this.z = z;
     }
 }
 
@@ -58,7 +50,7 @@ class Element{
 	//Sets the id of the element
 	setId(){
 		this.id = element_id++;
-		this.aelement.setAttribute("id","generated_element_"+this.id);
+		this.aelement.setAttribute("id","ge_"+this.id);
 		this.aelement.domelement = this.domelement;
 	}
 
@@ -230,61 +222,72 @@ class Element{
 
 	//Compares the position with its own position, returns true if they are the same
     comparePosition(position){
-        return this.position.top == position.top && this.position.bottom == position.bottom && this.position.left == position.left && this.position.right == position.right;
+        return this.position.top == position.top && this.position.height == position.height && this.position.left == position.left && this.position.width == position.width && this.position.z == position.z;
     }
 
 	//Update to the new position
     updatePosition(position){
-    	if(this.is_separate)
-    		this.position = position;
-    	else{
-	        this.position.top = position.top;
-	        this.position.bottom = position.bottom;
-	        this.position.left = position.left;
-	        this.position.right = position.right;
-	    }
+    	this.position = position;
 
-        this.domelement.vr_position = this.position;
+    	if(!this.is_separate && !this.has_separated_parent)
+	        this.position.z = 0;
+	    else
+			this.domelement.vr_position = this.position;
     }
 
 	//Calc the position of the element when separate 
 	getPosition(){
 		var position = this.domelement.getBoundingClientRect();
+
+		//If the element is not separated, just return
+		if(!this.is_separate && !this.has_separated_parent){
+			//Set z to 0 for elements that are not separated
+			position.z = 0;
+			return position;
+		}
+
+		var new_position = new Position();
+		
 		if(this.is_separate){
-			var new_position = new Position();
+			//In the separate attribute we deffine the position of the element in meter "x y z"
 			var separate_position = this.domelement.getAttribute("separate").split(" ");
 
+			//Calculate the new position
 			new_position.left = parseFloat(separate_position[0]) * pixels_per_meter;
-			new_position.right = position.right - position.left + new_position.left;
 			new_position.top = parseFloat(separate_position[1]) * pixels_per_meter;
-			new_position.bottom = position.bottom - position.top + new_position.top;
+
+			new_position.width = position.width;
+			new_position.height = position.height;
+
 			new_position.z = parseFloat(separate_position[2]);
+		}else if(this.has_separated_parent){//If the element has a parent that is separated, we have to position it correctly
+			//Get the position or the parent on the html page and in vr space
+			var parent = this.domelement.parentElement;
+			var parent_page_position = parent.getBoundingClientRect();
+			var parent_vr_position = parent.vr_position;
 
-			log("Separate position:");
-			log(new_position);
-
-			return new_position;
-		}else if(this.has_separated_parent){
-			var new_position = new Position();
-			var parent_vr_position = this.domelement.parentElement.vr_position;
-			var parent_page_position = this.domelement.getBoundingClientRect();
-
+			//Calculate position of the element
 			new_position.left = position.left - parent_page_position.left + parent_vr_position.left;
-			new_position.right = position.right - position.left + new_position.left;
-			new_position.top = position.right - parent_page_position.right + parent_vr_position.right;
-			new_position.bottom = position.bottom - position.top + new_position.top;
+			new_position.top = position.top - parent_page_position.top + parent_vr_position.top;
+
+			new_position.width = position.width;
+			new_position.height = position.height;
+
 			new_position.z = parent_vr_position.z;
+		}
 
-			log("Separate parent position:");
-			log(new_position);
+		//If there is a special vr width or heigt deffined, use that
+		if(this.domelement.hasAttribute("vr-width"))
+			new_position.width = parseFloat(this.domelement.getAttribute("vr-width")) * pixels_per_meter;
+		if(this.domelement.hasAttribute("vr-height"))
+			new_position.height = parseFloat(this.domelement.getAttribute("vr-height")) * pixels_per_meter;
 
-			return new_position;
-		}else
-			return position;
+		return new_position
 	}
 
     //Generic update function
     update(){
+    	var t0 = performance.now();
         //get new position
         var position = this.getPosition();
 
@@ -301,7 +304,7 @@ class Element{
         }
 
         //Check if the element was flagged as dirty, this only happens when it's style may have changed
-        if(this.isDirty){
+        if(this.isDirty()){
         	//Get the style of the elemtent, this is a heavy operation
 	        var element_style = window.getComputedStyle(this.domelement);
 
@@ -335,7 +338,7 @@ class TextElement extends Element{
 
 	elementUpdatePosition(){
 		//Calc the x and y possition
-        var y = -((this.position.bottom - this.position.top) / 2 + this.position.top)/pixels_per_meter;
+        var y = -(this.position.height / 2 + this.position.top)/pixels_per_meter;
         var x = this.position.left/pixels_per_meter;
 
         this.aelement.setAttribute("position",{x: x, y: y, z: this.depth + this.position.z});
@@ -390,8 +393,8 @@ class ContainerElement extends Element{
 	}
 
 	elementUpdatePosition(){
-		this.width = (this.position.right - this.position.left)/pixels_per_meter;
-		this.height = (this.position.bottom - this.position.top)/pixels_per_meter;
+		this.width = this.position.width/pixels_per_meter;
+		this.height = this.position.height/pixels_per_meter;
 
 		//Calculate y and x position
 		var y = -this.position.top/pixels_per_meter - this.height/2;
@@ -460,8 +463,8 @@ class ImageElement extends Element{
 
 	elementUpdatePosition(){
 		//Calc with and height of the element
-		var width = (this.position.right - this.position.left)/pixels_per_meter;
-		var height = (this.position.bottom - this.position.top)/pixels_per_meter;
+		var width = this.position.width/pixels_per_meter;
+		var height = this.position.height/pixels_per_meter;
 
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);

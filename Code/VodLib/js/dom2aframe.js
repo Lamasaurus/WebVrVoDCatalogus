@@ -147,7 +147,7 @@ class Dom2Aframe{
 		log(element);
 		var new_a_element = null;
 
-		if(element.nodeName == "#text")
+		if(element.nodeName == "#text" || element.added_to_a_scene)
 			return;
 
 		//Some random element gets spawned and deleted immediately after, I don't see where it comes from or what its purpose is, but it gives errors. Now they don't get added
@@ -180,8 +180,12 @@ class Dom2Aframe{
 	    	this.a_element_container.appendChild(new_a_element.getAElement());
 	    	this.a_elements.push(new_a_element);
 
+	    	log(new_a_element);
+
 	    	this.layer_depth += layer_difference;
 	    }
+
+	    element.added_to_a_scene = true;
 	}
 
 	//Adds the element and then recursively calls this function on its direct children
@@ -231,7 +235,7 @@ class Dom2Aframe{
 
 	    //Transcode every element in the page
 		for (i = 0; i < items.length; i++)
-			this.AddNewElement(items[i]);
+			this.AddNewElement(items[i], false);
 	}
 
 	enterVr(){
