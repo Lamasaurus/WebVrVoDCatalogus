@@ -15,6 +15,14 @@ class Position{
 
         this.z = 0;
     }
+
+    copyPosition(pos){
+    	this.top = pos.top;
+        this.left = pos.left;
+
+        this.width = pos.width;
+        this.height = pos.height;
+    }
 }
 
 //Basis of an element
@@ -22,7 +30,7 @@ class Element{
 	constructor(domelement, depth, has_separated_parent){
 		this.domelement = domelement;
 		this.has_separated_parent = has_separated_parent;
-		this.is_separate = domelement.hasAttribute("separate");
+		
 		//Make sure dom elements can tell theyr children to update
 		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
 		this.aelement = null;
@@ -235,9 +243,24 @@ class Element{
 			this.domelement.vr_position = this.position;
     }
 
+    //Set the subtree as separated
+    setSubtreeSeparate(){
+    	this.has_separated_parent = true;
+
+    	var children = this.domelement.childNodes;
+		for(var i = 0, len = children.length; i < len; i++)
+			children[i].has_separated_parent = true;
+    }
+
 	//Calc the position of the element when separate 
 	getPosition(){
 		var position = this.domelement.getBoundingClientRect();
+
+		//Check if is separated now
+		this.is_separate = this.domelement.hasAttribute("separate") || this.domelement.hasAttribute("vr-z");
+
+		if(this.is_separate && !this.has_separated_parent)
+			this.setSubtreeSeparate();
 
 		//If the element is not separated, just return
 		if(!this.is_separate && !this.has_separated_parent){
@@ -247,19 +270,26 @@ class Element{
 		}
 
 		var new_position = new Position();
-		
+
 		if(this.is_separate){
-			//In the separate attribute we deffine the position of the element in meter "x y z"
-			var separate_position = this.domelement.getAttribute("separate").split(" ");
 
-			//Calculate the new position
-			new_position.left = parseFloat(separate_position[0]) * pixels_per_meter;
-			new_position.top = parseFloat(separate_position[1]) * pixels_per_meter;
+			if(this.domelement.hasAttribute("separate")){
+				//In the separate attribute we deffine the position of the element in meter "x y z"
+				var separate_position = this.domelement.getAttribute("separate").split(" ");
 
-			new_position.width = position.width;
-			new_position.height = position.height;
+				//Calculate the new position
+				new_position.left = parseFloat(separate_position[0]) * pixels_per_meter;
+				new_position.top = parseFloat(separate_position[1]) * pixels_per_meter;
 
-			new_position.z = parseFloat(separate_position[2]);
+				new_position.width = position.width;
+				new_position.height = position.height;
+
+				new_position.z = parseFloat(separate_position[2]);
+			}else if(this.domelement.hasAttribute("vr-z")){
+				new_position.copyPosition(position);
+				new_position.z = parseFloat(this.domelement.getAttribute("vr-z"));
+			}
+
 		}else if(this.has_separated_parent){//If the element has a parent that is separated, we have to position it correctly
 			//Get the position or the parent on the html page and in vr space
 			var parent = this.domelement.parentElement;
@@ -287,7 +317,6 @@ class Element{
 
     //Generic update function
     update(){
-    	var t0 = performance.now();
         //get new position
         var position = this.getPosition();
 

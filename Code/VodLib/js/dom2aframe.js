@@ -4,11 +4,11 @@ var debugging = true;
 //Amount of frames per second that animations should be updated with
 var animation_fps = 30;
 
-//The size of the CSS refference pixel times 2
-var pixels_per_meter = 200/0.26;
+//The size of the CSS refference pixel
+var pixels_per_meter = 1000/0.26;
 
-//the depth difference between elements
-var layer_difference = 0.00001;
+//The depth difference between elements in meter
+var layer_difference = 0.00002;
 
 var dom2aframe;
 var asset_manager;
@@ -113,9 +113,9 @@ class Dom2Aframe{
 	}
 
 	initStyles(){
-		//Inject css to get the VR button fixed and the a-scene on top of everything
+		//Inject css to get the VR button fixed and the a-scene on top of everything and defining the custom vr properties
 	    this.vrcss = document.createElement('style');
-	    this.vrcss.innerHTML = ".a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
+	    this.vrcss.innerHTML = "*{--vr-x:;--vr-y:;--vr-z:;--vr-scale:;--vr-xscale:;--vr-yscale:;--vr-rotation:;} .a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
 	    document.body.appendChild(this.vrcss);
 
 	    //Style that changes when in vr
@@ -155,7 +155,7 @@ class Dom2Aframe{
 			return;
 
 		//If an element is separate, the children should be separate to
-		if(element.hasAttribute("separate") && !has_separated_parent){
+		if((element.hasAttribute("separate") || element.hasAttribute("vr-z")) && !has_separated_parent){
 			this.AddNewNestedElement(element, true);
 			return;
 		}

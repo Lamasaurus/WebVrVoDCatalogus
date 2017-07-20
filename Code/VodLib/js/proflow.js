@@ -23,8 +23,8 @@ function createCategory(category) {
 		"</div>" +
 		"<header>" +
 		"\t<div class=\"pager\">" +
-		"\t\t<a href=\"#\" class=\"prev disabled\" hover=\"prevhover\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\"></a>" +
-		"\t\t<a href=\"#\" class=\"next\" hover=\"nexthover\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\"></a>" +
+		"\t\t<a href=\"#\" class=\"prev disabled\" hover=\"prevhover\" vr-z=\"0.1\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\"></a>" +
+		"\t\t<a href=\"#\" class=\"next\" hover=\"nexthover\" vr-z=\"0.1\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\"></a>" +
 		"\t</div>" +
 		"</header>";
 
@@ -47,7 +47,7 @@ function createArticle(film) {
 		"\t\t</div>" +
 		"\t</header>" +*/
 		"\t<div class=\"main\">" +
-		"\t\t\t\t\t\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + "); return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
+		"\t\t\t\t\t\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + ");\" onmouseenter=\"this.setAttribute(\'vr-z\',Number(this.getAttribute(\'vr-z\'))+0.05);\" onmouseleave=\"this.setAttribute(\'vr-z\',Number(this.getAttribute(\'vr-z\'))-0.05);\" return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
 		"\t</div>" +
 		"</a>";
 

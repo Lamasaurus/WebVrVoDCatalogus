@@ -5,7 +5,7 @@ class Camera{
 		//Camera gets placed to show the page directeley
 		this.aelement = document.createElement("a-camera");
 		//The z distance gets calculated with a/sin(A) = c/sin(C) where c is the z distance and a the body width / 2, A = 50° C = 40°
-		this.camera_distance = ((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
+		this.camera_distance = 0.50;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
 		this.aelement.setAttribute("user-height", "0");
 		this.aelement.setAttribute("fov", "80");
 		this.aelement.setAttribute("far", "10000");

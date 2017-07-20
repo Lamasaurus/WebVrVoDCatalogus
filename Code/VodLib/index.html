@@ -14,7 +14,7 @@
 	<div id="page">
 
 		<header>
-			<div class="wrap">
+			<div separate="0 0 0" class="wrap">
 				<section class="siteLabel">
 					<h1><span class="logo"><a href="https://www.iminds.be/en/projects/PRO-FLOW"><img alt="PRO-FLOW" src="icon/PRO-FLOW-logo-in-ellipse.svg"></a></span></h1>
 				</section>
@@ -29,7 +29,7 @@
 				</nav>
 			</div>
 
-			<nav separate="0.5 0.5 0.3" vr-width="1.5" vr-height="0.08" class="sub">
+			<nav vr-z="0.01" class="sub">
 				<ul>
 					<li show-player hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
 					<li play-video="video/MaryOculus.mp4" hover="navsubliapagehover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
@@ -40,7 +40,7 @@
 				</ul>
 			</nav>
 
-			<section class="search">
+			<section vr-z="0.01" class="search">
 				<form id="searchForm" action="/tv-theek/zoek/" method="get">
 					<div class="inputWrap"><label for="searchField">Search</label><input name="q" class="textfield" id="searchField" autocomplete="off" placeholder="Zoeken"
 						 type="text">
@@ -51,7 +51,7 @@
 				</form>
 			</section>
 
-			<section class="filters">
+			<section vr-z="0.01" class="filters">
 				<header>
 					<h1>Toon: Filter</h1>
 				</header>
