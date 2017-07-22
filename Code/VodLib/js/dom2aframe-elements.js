@@ -7,35 +7,90 @@ var element_id = 0;
 //Class to represent a position
 class Position{
     constructor(){
-        this.top = 0;
-        this.left = 0;
+        this.vector = [0,0,0,1];
 
         this.width = 0;
         this.height = 0;
-
-        this.z = 0;
     }
 
     copyPosition(pos){
-    	this.top = pos.top;
-        this.left = pos.left;
+        this.vector[0] = Number(pos.left);
+    	this.vector[1] = Number(pos.top);
 
         this.width = pos.width;
         this.height = pos.height;
     }
 }
 
+/*class TransformationMatrixManager{
+	constructor(){
+		this.reset();
+	}
+
+	reset(){
+		this.matrix = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+	}
+
+	translate(x,y,z){
+		this.matrix = math.multiply([[1,0,0,x],[0,1,0,y],[0,0,1,z],[0,0,0,1]], this.matrix);
+	}
+
+	scale(x,y){
+		this.matrix = math.multiply([[x,0,0,0],[0,y,0,0],[0,0,1,0],[0,0,0,1]], this.matrix);
+	}
+
+	rotate(x,y,z){
+		//rotate x
+		this.matrix = math.multiply([[1,0,0,0],
+								[0,Math.cos(x),-Math.sin(x),0],
+								[0,Math.sin(x),Math.cos(x),0],
+								[0,0,0,1]], this.matrix);
+
+		//rotate y
+		this.matrix = math.multiply([[Math.cos(y),0,Math.sin(y),0],
+								[0,1,0,0],
+								[-Math.sin(y),1,Math.cos(y),0],
+								[0,0,0,1]], this.matrix);
+
+		//rotate z
+		this.matrix = math.multiply([[Math.cos(x),-Math.sin(x),0,0],
+								[Math.sin(x),Math.cos(3),0,0],
+								[0,0,1,0],
+								[0,0,0,1]], this.matrix);
+	}
+}*/
+
+class TransformationManager{
+	constructor(){
+		this.position = [0,0,0];
+
+		this.rotation = [0,0,0];
+
+		this.scale = [1,1];
+	}
+
+	setPosition(x,y,z){
+		this.position = [Number(x),Number(y),Number(z)];
+	}
+
+	setScale(x,y){
+		this.scale = [Number(x),Number(y)];
+	}
+
+	setRotate(x,y,z){
+		this.rotation = [Number(x),Number(y),Number(z)];
+	}
+}
+
 //Basis of an element
 class Element{
-	constructor(domelement, depth, has_separated_parent){
+	constructor(domelement){
 		this.domelement = domelement;
-		this.has_separated_parent = has_separated_parent;
 		
 		//Make sure dom elements can tell theyr children to update
 		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
+		this.domelement.setSubtreeSeparate = () => { this.setSubtreeSeparate(); };
 		this.aelement = null;
-
-		this.depth = depth;
 
         //Listenes for direct css changes
 		(new MutationObserver(this.checkIfDirty.bind(this))).observe(this.domelement, { attributes: true, childList: true, characterData: true, subtree: false, attributeOldValue : true });
@@ -50,6 +105,11 @@ class Element{
         this.domelement.addEventListener("transitionend", this.stopAnimation.bind(this));
 
         this.position = new Position();
+        this.vr_position = [0,0,0];
+
+        this.transformation = new TransformationManager();
+
+        this.is_transparant = false;
 
         //Flag for when we need to redraw
         this.dirty = true;
@@ -208,10 +268,10 @@ class Element{
 	        if(mutation[i].oldValue === this.domelement.getAttribute(mutation[i].attributeName))
 	        	continue;
 
-	        log("Mutated element:")
+	        /*log("Mutated element:")
 	    	log(this);
 	    	log("Mutation:")
-	    	log(mutation[i]);
+	    	log(mutation[i]);*/
 
 	    	//Check if the elements style and possibly the style of its children changed
 	        if(mutation[i].type === "attributes" && (mutation[i].attributeName === "class" || mutation[i].attributeName === "style"))
@@ -225,22 +285,12 @@ class Element{
 
     //Returns if an element is visible, el.offsetParent is null if a parent is invisible but the body always has a null value with this
 	isNotHidden(el, style){
-		return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none");
+		return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none" && !this.is_transparant);
 	}
 
 	//Compares the position with its own position, returns true if they are the same
     comparePosition(position){
         return this.position.top == position.top && this.position.height == position.height && this.position.left == position.left && this.position.width == position.width && this.position.z == position.z;
-    }
-
-	//Update to the new position
-    updatePosition(position){
-    	this.position = position;
-
-    	if(!this.is_separate && !this.has_separated_parent)
-	        this.position.z = 0;
-	    else
-			this.domelement.vr_position = this.position;
     }
 
     //Set the subtree as separated
@@ -249,93 +299,116 @@ class Element{
 
     	var children = this.domelement.childNodes;
 		for(var i = 0, len = children.length; i < len; i++)
-			children[i].has_separated_parent = true;
+			if(children[i].setSubtreeSeparate)
+				children[i].setSubtreeSeparate();
+    }
+
+    //Get the value of the style, or 0 of it is null
+    getStyleValue(name, computed_style){
+    	return computed_style.getPropertyValue(name).trim();
+    }
+
+    getTransormation(computed_style){
+
+    	this.updatePosition(this.getPosition());
+
+		if(this.is_separate){
+			var x = this.getStyleValue("--vr-x", computed_style);
+			if(x == "null")
+				x = this.position.vector[0];
+
+			var y = this.getStyleValue("--vr-y", computed_style);
+			if(y == "null")
+				y = this.position.vector[1];
+
+			var z = this.getStyleValue("--vr-z", computed_style);
+			if(z == "null")
+				z = this.position.vector[2];
+
+			this.transformation.setPosition(x,y,z);
+
+			//If there is a special vr scale deffined, use that
+			var scale = computed_style.getPropertyValue("--vr-scale").trim();
+			if(scale != "null"){
+				scale = scale.split(" ");
+
+				this.transformation.setScale(scale[0], scale[1]);
+			}
+
+			//If there is a special vr scale deffined, use that
+			var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
+			if(rotation != "null"){
+				rotation = rotation.split(" ");
+
+				this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
+			}
+		}
+
+		log("got matrix");
+		log(this.transformation.position);
+    }
+
+    //Update to the new position
+    updatePosition(position){
+    	/*if(this.is_separate)
+    		return;
+    	else if(this.has_separated_parent){
+    		if(this.position.left != position.left)
+    			this.vr_position.left -= 
+    	}*/
+
+	    this.position = position;
+
+	    if(this.is_separate)
+	    	this.vr_position = this.transformation.position;
+	    else
+	    	this.vr_position = this.position.vector;
     }
 
 	//Calc the position of the element when separate 
 	getPosition(){
-		var position = this.domelement.getBoundingClientRect();
-
-		//Check if is separated now
-		this.is_separate = this.domelement.hasAttribute("separate") || this.domelement.hasAttribute("vr-z");
-
-		if(this.is_separate && !this.has_separated_parent)
-			this.setSubtreeSeparate();
-
-		//If the element is not separated, just return
-		if(!this.is_separate && !this.has_separated_parent){
-			//Set z to 0 for elements that are not separated
-			position.z = 0;
-			return position;
-		}
-
-		var new_position = new Position();
-
-		if(this.is_separate){
-
-			if(this.domelement.hasAttribute("separate")){
-				//In the separate attribute we deffine the position of the element in meter "x y z"
-				var separate_position = this.domelement.getAttribute("separate").split(" ");
-
-				//Calculate the new position
-				new_position.left = parseFloat(separate_position[0]) * pixels_per_meter;
-				new_position.top = parseFloat(separate_position[1]) * pixels_per_meter;
-
-				new_position.width = position.width;
-				new_position.height = position.height;
-
-				new_position.z = parseFloat(separate_position[2]);
-			}else if(this.domelement.hasAttribute("vr-z")){
-				new_position.copyPosition(position);
-				new_position.z = parseFloat(this.domelement.getAttribute("vr-z"));
-			}
-
-		}else if(this.has_separated_parent){//If the element has a parent that is separated, we have to position it correctly
+		/*if(this.has_separated_parent){//If the element has a parent that is separated, we have to position it correctly
 			//Get the position or the parent on the html page and in vr space
-			var parent = this.domelement.parentElement;
-			var parent_page_position = parent.getBoundingClientRect();
-			var parent_vr_position = parent.vr_position;
+			var parent_page_position = this.domelement.parentElement.getBoundingClientRect();
+			var this.domelement.parentElement_vr_position = parent.vr_position;
 
 			//Calculate position of the element
-			new_position.left = position.left - parent_page_position.left + parent_vr_position.left;
-			new_position.top = position.top - parent_page_position.top + parent_vr_position.top;
+			this.vr_position.left = this.position.left - parent_page_position.left + parent_vr_position.left;
+			this.vr_position.top = this.position.top - parent_page_position.top + parent_vr_position.top;
 
-			new_position.width = position.width;
-			new_position.height = position.height;
+			this.vr_position.width = this.position.width;
+			this.vr_position.height = this.position.height;
 
-			new_position.z = parent_vr_position.z;
-		}
+			this.vr_position.z = parent_vr_position.z;
+		}else{*/
+			var position = new Position();
+			position.copyPosition(this.domelement.getBoundingClientRect());
+			var parent_position = this.domelement.parentElement.getBoundingClientRect();
+			position.vector[0] -= parent_position.left + parent_position.width/2;
+			position.vector[1] -= parent_position.top + parent_position.height/2;
 
-		//If there is a special vr width or heigt deffined, use that
-		if(this.domelement.hasAttribute("vr-width"))
-			new_position.width = parseFloat(this.domelement.getAttribute("vr-width")) * pixels_per_meter;
-		if(this.domelement.hasAttribute("vr-height"))
-			new_position.height = parseFloat(this.domelement.getAttribute("vr-height")) * pixels_per_meter;
+			return position;
+		//}
+	}
 
-		return new_position
+	checkIfSeparate(computed_style){
+		return computed_style.getPropertyValue("--vr-x").trim() !== "null" || computed_style.getPropertyValue("--vr-y").trim() !== "null" || computed_style.getPropertyValue("--vr-z").trim() !== "null" || computed_style.getPropertyValue("--vr-rotate").trim() !== "null" || computed_style.getPropertyValue("--vr-scale").trim() !== "null";
 	}
 
     //Generic update function
     update(){
-        //get new position
-        var position = this.getPosition();
-
-        //Check if something changed since last time, else we just stop the update
-        if(this.comparePosition(position) && !this.isDirty())
-            return;
-
-        //Check if the postition was updated
-        if(!this.comparePosition(position)){
-	        //Cash the new position
-	        this.updatePosition(position);
-	        //Let the element update its own position
-        	this.elementUpdatePosition();
-        }
-
         //Check if the element was flagged as dirty, this only happens when it's style may have changed
         if(this.isDirty()){
         	//Get the style of the elemtent, this is a heavy operation
 	        var element_style = window.getComputedStyle(this.domelement);
+
+	        //Check if is separated now
+			this.is_separate = this.checkIfSeparate(element_style);
+
+			if(this.is_separate && !this.has_separated_parent)
+				this.setSubtreeSeparate();
+			if(this.is_separate || this.has_separated_parent)
+				this.getTransormation(element_style);
 
 	        //Let the element update its own style
 	        this.elementSpecificUpdate(element_style);
@@ -347,17 +420,24 @@ class Element{
 	    	this.aelement.setAttribute("opacity", "");
 	    	this.aelement.setAttribute("opacity", new_opacity);
 
+	    	this.aelement.setAttribute("scale", {x:this.transformation.scale[0], y:this.transformation.scale[1], z:1});
+	    	this.aelement.setAttribute("rotation", {x:this.transformation.rotation[0], y:this.transformation.rotation[1], z:this.transformation.rotation[2]});
+
 	        this.dirty = false;
 	    }
+
+        //Cash the new position
+        this.updatePosition(this.getPosition());
+        //Let the element update its own position
+    	this.elementUpdatePosition();
     }
 }
 
 class TextElement extends Element{
-	constructor(domelement, depth, has_separated_parent, dontAddFunc){
-		super(domelement, depth, has_separated_parent);
+	constructor(domelement, dontAddFunc){
+		super(domelement);
 
 		this.aelement = document.createElement("a-text");
-		this.update();
 
 		this.setId();
 
@@ -367,10 +447,10 @@ class TextElement extends Element{
 
 	elementUpdatePosition(){
 		//Calc the x and y possition
-        var y = -(this.position.height / 2 + this.position.top)/pixels_per_meter;
-        var x = this.position.left/pixels_per_meter;
+        var x = this.vr_position[0]/pixels_per_meter;
+        var y = -(this.position.height / 2 + this.vr_position[1])/pixels_per_meter;
 
-        this.aelement.setAttribute("position",{x: x, y: y, z: this.depth + this.position.z});
+        this.aelement.setAttribute("position",{x: x, y: y, z: layer_difference + this.vr_position[2]});
 	}
 
 	//Strips all tags from a string
@@ -388,12 +468,11 @@ class TextElement extends Element{
 			this.aelement.setAttribute('color', "");
 	        this.aelement.setAttribute('color', element_style.getPropertyValue("color"));
 
-	        this.aelement.setAttribute("visible", true);
-
 	        this.aelement.setAttribute("side","");
 	        this.aelement.setAttribute("side","double");
+	        this.is_transparant = false;
 	    }else{ //If the element is transparent we just don't show it
-	    	this.aelement.setAttribute("visible", false);
+	    	this.is_transparant = true;
 	    }
 
 		this.aelement.setAttribute("width",0);
@@ -409,11 +488,10 @@ class TextElement extends Element{
 }
 
 class ContainerElement extends Element{
-	constructor(domelement, depth, has_separated_parent, dontAddFunc){
-		super(domelement, depth, has_separated_parent);
+	constructor(domelement, depth, dontAddFunc){
+		super(domelement, depth);
 
 		this.aelement = document.createElement("a-plane");
-		this.update();
 
 		this.setId();
 
@@ -426,10 +504,10 @@ class ContainerElement extends Element{
 		this.height = this.position.height/pixels_per_meter;
 
 		//Calculate y and x position
-		var y = -this.position.top/pixels_per_meter - this.height/2;
-		var x = this.position.left/pixels_per_meter + this.width/2;
+		var y = -this.vr_position[1]/pixels_per_meter - this.height/2;
+		var x = this.vr_position[0]/pixels_per_meter + this.width/2;
 
-		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth + this.position.z});
+		this.aelement.setAttribute('position', {x: x, y: y, z: layer_difference + this.vr_position[2]});
 
 		this.aelement.setAttribute("width", this.width);
 		this.aelement.setAttribute("height", this.height);
@@ -454,8 +532,6 @@ class ContainerElement extends Element{
 		this.aelement.setAttribute("visible", "");
 	
 		if(dom2aframe.transparent != background_color || background_image){ //Check if the element is not transparent or has a background image
-			this.aelement.setAttribute("visible", true);
-
 			if(this.isUrl(background_image)){//Check if the path to the background image is a legitimate url
 				this.aelement.setAttribute('material','');
 				//Set the source to the right asset id and alphaTest on 0.5, this makes that if a PNG uses alpha, that alpha is respected and not just white
@@ -466,17 +542,18 @@ class ContainerElement extends Element{
 			//Set double sided so we can look at the element from behind
 			this.aelement.setAttribute("side","");
 			this.aelement.setAttribute("side","double");
+
+			this.is_transparant = false;
 		}else{ //If the element is transparent we just don't show it
-			this.aelement.setAttribute("visible", false);
+			this.is_transparant = true;
 		}
 	}
 }
 
 //Image elements represent img dom elements
 class ImageElement extends Element{
-	constructor(domelement, depth, has_separated_parent){
-		super(domelement, depth, has_separated_parent);
-        this.depth = depth;
+	constructor(domelement){
+		super(domelement);
 
 		this.aelement = document.createElement("a-image");
 		//Set the source of the element, this is the id  of the image element in the a-asset tag
@@ -484,8 +561,6 @@ class ImageElement extends Element{
 		//Set alphaTest on 0.5, this makes that if a PNG uses alpha, that alpha is respected and not just white
 		this.aelement.setAttribute("material","alphaTest: 0.5");
 
-		//Initiation update
-		this.update();
 		this.setId();
 		this.addFunctionality();
 	}
@@ -498,12 +573,12 @@ class ImageElement extends Element{
 		this.aelement.setAttribute("width", width);
 		this.aelement.setAttribute("height", height);
 
-		//Calculate the y position
-		var y = -this.position.top/pixels_per_meter - height/2;
 		//Calculate the x position
-		var x = this.position.left/pixels_per_meter + width/2;
+		var x = this.vr_position[0]/pixels_per_meter;
+		//Calculate the y position
+		var y = -this.vr_position[1]/pixels_per_meter - height/2;
 
-		this.aelement.setAttribute('position', {x: x, y: y, z: this.depth + this.position.z});
+		this.aelement.setAttribute('position', {x: x, y: y, z: layer_difference + this.vr_position[2]});
 	}
 
 	elementSpecificUpdate(element_style){
@@ -513,21 +588,20 @@ class ImageElement extends Element{
 
 //Text with background represents every element that contains pure text
 class TextWithBackgroundElement extends Element{
-	constructor(domelement, depth, has_separated_parent){
-		super(domelement, depth, has_separated_parent);
+	constructor(domelement){
+		super(domelement);
 
 		this.aelement = document.createElement("a-entity");
 		this.aelement.setAttribute("side","double");
 
 		//Make separate container and text element
-		this.aplane = new ContainerElement(domelement, depth, has_separated_parent);
-		this.atext = new TextElement(domelement, depth - layer_difference, has_separated_parent, true);
+		this.aplane = new ContainerElement(domelement);
+		this.atext = new TextElement(domelement, true);
 
 		//Add container and text to this entity
 		this.aelement.appendChild(this.aplane.getAElement());
 		this.aelement.appendChild(this.atext.getAElement());
 
-		this.update();
 		this.setId();
 		//this.addFunctionality();
 	}

@@ -14,13 +14,13 @@
 	<div id="page">
 
 		<header>
-			<div separate="0 0 0" class="wrap">
+			<div class="wrap">
 				<section class="siteLabel">
-					<h1><span class="logo"><a href="https://www.iminds.be/en/projects/PRO-FLOW"><img alt="PRO-FLOW" src="icon/PRO-FLOW-logo-in-ellipse.svg"></a></span></h1>
+					<img alt="PRO-FLOW" src="icon/PRO-FLOW-logo-in-ellipse.svg">
 				</section>
 				<nav class="main">
 					<ul>
-						<li id="debug" hover="navmainullu" onclick="switchActive(this,0)"><a href="#" class="page">TV-KIJKEN</a></li>
+						<li hover="navmainullu" onclick="switchActive(this,0)"><a href="#" class="page">TV-KIJKEN</a></li>
 						<li hover="navmainullu" onclick="switchActive(this,0)"><a href="#" class="page">OPNAMES</a></li>
 						<li hover="navmainullu" onclick="switchActive(this,0)"><a href="#" class="page">TV-GIDS</a></li>
 						<li hover="navmainullu" id="first-active-main" class="active" onclick="switchActive(this,0)"><a href="#" class="page">TV-THEEK</a></li>
@@ -29,9 +29,9 @@
 				</nav>
 			</div>
 
-			<nav vr-z="0.01" class="sub">
+			<nav class="sub">
 				<ul>
-					<li show-player hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
+					<li id="debug" show-player hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
 					<li play-video="video/MaryOculus.mp4" hover="navsubliapagehover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
 					<li play-video="video/city-4096-mp4-30fps-x264-ffmpeg.mp4" hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">Series</a></li>
 					<li hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">Kids</a></li>
@@ -40,7 +40,7 @@
 				</ul>
 			</nav>
 
-			<section vr-z="0.01" class="search">
+			<section class="search">
 				<form id="searchForm" action="/tv-theek/zoek/" method="get">
 					<div class="inputWrap"><label for="searchField">Search</label><input name="q" class="textfield" id="searchField" autocomplete="off" placeholder="Zoeken"
 						 type="text">
@@ -51,7 +51,7 @@
 				</form>
 			</section>
 
-			<section vr-z="0.01" class="filters">
+			<section class="filters">
 				<header>
 					<h1>Toon: Filter</h1>
 				</header>
@@ -80,6 +80,7 @@
 	<script src="js/aframe-stereo-component.js"></script>
 	<script src="js/aframe-video-controls.js"></script>
 	<script src="https://cdn.rawgit.com/zcanter/aframe-gradient-sky/master/dist/gradientsky.min.js"></script>
+	<script src="js/math.min.js"></script>
 
 	<script src="js/dom2aframe-assetmanager.js"></script>
 	<script src="js/dom2aframe-elements.js"></script>

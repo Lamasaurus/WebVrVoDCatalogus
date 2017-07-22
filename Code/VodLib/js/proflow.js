@@ -23,8 +23,8 @@ function createCategory(category) {
 		"</div>" +
 		"<header>" +
 		"\t<div class=\"pager\">" +
-		"\t\t<a href=\"#\" class=\"prev disabled\" hover=\"prevhover\" vr-z=\"0.1\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\"></a>" +
-		"\t\t<a href=\"#\" class=\"next\" hover=\"nexthover\" vr-z=\"0.1\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\"></a>" +
+		"\t\t<a href=\"#\" class=\"prev disabled\" hover=\"prevhover\" style=\"--vr-z: 0.01;\"  onclick=\"(function(e){moveCarousel(e,'" + category.id + "',-1);return false;})(event)\"></a>" +
+		"\t\t<a href=\"#\" class=\"next\" hover=\"nexthover\" style=\"--vr-z: 0.01;\" onclick=\"(function(e){moveCarousel(e,'" + category.id + "',1);return false;})(event)\"></a>" +
 		"\t</div>" +
 		"</header>";
 

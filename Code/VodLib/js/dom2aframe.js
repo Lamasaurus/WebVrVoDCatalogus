@@ -8,7 +8,7 @@ var animation_fps = 30;
 var pixels_per_meter = 1000/0.26;
 
 //The depth difference between elements in meter
-var layer_difference = 0.00002;
+var layer_difference = 0.00001;
 
 var dom2aframe;
 var asset_manager;
@@ -66,8 +66,10 @@ class Dom2Aframe{
 
 	    //Indicates that something was dirty and all other elements should check if they changed
 		this.somethingdirty = false;
+	}
 
-	    //Start render loop
+	startLoop(){
+		//Start render loop
 	    window.requestAnimationFrame(this.UpdateAll.bind(this));
 	}
 
@@ -115,7 +117,7 @@ class Dom2Aframe{
 	initStyles(){
 		//Inject css to get the VR button fixed and the a-scene on top of everything and defining the custom vr properties
 	    this.vrcss = document.createElement('style');
-	    this.vrcss.innerHTML = "*{--vr-x:;--vr-y:;--vr-z:;--vr-scale:;--vr-xscale:;--vr-yscale:;--vr-rotation:;} .a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
+	    this.vrcss.innerHTML = "*{--vr-x:null;--vr-y:null;--vr-z:null;--vr-scale:null;--vr-rotate:null;} .a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
 	    document.body.appendChild(this.vrcss);
 
 	    //Style that changes when in vr
@@ -155,25 +157,25 @@ class Dom2Aframe{
 			return;
 
 		//If an element is separate, the children should be separate to
-		if((element.hasAttribute("separate") || element.hasAttribute("vr-z")) && !has_separated_parent){
+		/*if((element.hasAttribute("separate") || element.hasAttribute("vr-z")) && !has_separated_parent){
 			this.AddNewNestedElement(element, true);
 			return;
-		}
+		}*/
 
 		//Container element
 		if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE")
-			new_a_element = new ContainerElement(element,this.layer_depth, has_separated_parent);
+			new_a_element = new ContainerElement(element);
 
 		//Text based elements
 	    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || element.tagName == "SPAN" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){
-	    	new_a_element = new TextWithBackgroundElement(element, this.layer_depth, has_separated_parent);
+	    	new_a_element = new TextWithBackgroundElement(element);
 	    	//Because this element takes up 2 layers we increase the layer depth here
 			this.layer_depth += layer_difference;
 	    }
 	    
 	    //Images
 	    if(element.tagName == "IMG")
-	      new_a_element = new ImageElement(element, this.layer_depth, has_separated_parent);
+	      new_a_element = new ImageElement(element);
 
 	    //Push the element in the array of all elements
 	    if(new_a_element != null){
@@ -181,20 +183,30 @@ class Dom2Aframe{
 	    	this.a_elements.push(new_a_element);
 
 	    	log(new_a_element);
+	    	log(this.layer_depth);
 
 	    	this.layer_depth += layer_difference;
 	    }
 
 	    element.added_to_a_scene = true;
+	    return new_a_element;
 	}
 
 	//Adds the element and then recursively calls this function on its direct children
-	AddNewNestedElement(element, is_separate){
-		this.AddNewElement(element, is_separate);
+	AddNewNestedElement(element){
+		var parent = this.AddNewElement(element);
+
+		if(parent == null)
+			return;
 
 		var children = element.childNodes;
-		for(var i = 0; i < children.length; i++)
-			this.AddNewNestedElement(children[i], is_separate);
+		for(var i = 0; i < children.length; i++){
+			var child = this.AddNewNestedElement(children[i]);
+			if(child != undefined)
+				parent.getAElement().appendChild(child.getAElement());
+		}
+
+		return parent;
 	}
 
 	//Seeks and removes an element
@@ -228,14 +240,18 @@ class Dom2Aframe{
 	//Creates an element for every dom element that is present in the body and the body itself
 	createAllElements(){
 		//Get all elements that exist in the body
-		var items = new Array(document.body);
+		/*var items = new Array(document.body);
 		var doc_items = document.body.getElementsByTagName("*");
 		for(var i = 0; i < doc_items.length; i++)
 			items.push(doc_items[i]);
 
 	    //Transcode every element in the page
 		for (i = 0; i < items.length; i++)
-			this.AddNewElement(items[i], false);
+			this.AddNewElement(items[i], false);*/
+
+		this.AddNewNestedElement(document.body);
+
+		this.startLoop();
 	}
 
 	enterVr(){
@@ -262,13 +278,13 @@ class Dom2Aframe{
 	    switch(e.keyCode){
 	    case 65: //press E or A to go up and down. 
 	    	var pos = this.camera.getPosition();
-	        this.camera.setPosition({x:pos.x, y:(pos.y + 0.5), z: pos.z});
+	        this.camera.setPosition({x:pos.x, y:(pos.y + 0.1), z: pos.z});
 	        this.video_element.SetPosition(pos);
 	    	break;
 
 	    case 69: //press E or A to go up and down. 
 	        var pos = this.camera.getPosition();
-	        this.camera.setPosition({x:pos.x, y:(pos.y - 0.5), z: pos.z});
+	        this.camera.setPosition({x:pos.x, y:(pos.y - 0.1), z: pos.z});
 	        this.video_element.SetPosition(pos);
 	        break;
 
