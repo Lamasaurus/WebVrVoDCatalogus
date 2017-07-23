@@ -119,7 +119,9 @@ class Element{
 	setId(){
 		this.id = element_id++;
 		this.aelement.setAttribute("id","ge_"+this.id);
+
 		this.aelement.domelement = this.domelement;
+		this.domelement.aelement = this.aelement;
 	}
 
 	//Returns true if attribute existes and the functionality can be used
@@ -343,9 +345,6 @@ class Element{
 				this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
 			}
 		}
-
-		log("got matrix");
-		log(this.transformation.position);
     }
 
     //Update to the new position

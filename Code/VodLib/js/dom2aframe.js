@@ -10,6 +10,9 @@ var pixels_per_meter = 1000/0.26;
 //The depth difference between elements in meter
 var layer_difference = 0.00001;
 
+var text_elements = ["P","CAPTION","cite","B","CODE","I","A","BUTTON","SPAN","LABEL","STRONG","U","SUB","SUP","SUMMARY","SMALL","SAMP","EM","KBD","VAR","S","Q","PRE","MARK","INS","FIGCAPTION","DT","DL","DFN","DEL","DD","CAPTION","BLOCKQUOTE","ADDRESS","ADDR"];
+var container_elements = ["BODY","DIV","SECTION","NAV","UL","LI","HEADER","FORM","INPUT","ARTICLE","TABLE","TR","TH","TBODY","THEAD","TFOOT","TD","PROGRESS","MAIN","HR","FOOTER","FIGURE","PICTURE","ASIDE"];
+
 var dom2aframe;
 var asset_manager;
 
@@ -107,7 +110,7 @@ class Dom2Aframe{
 	initEvents(){
 		//Observer to check for newly added or deleted DOM elements
 		var observer = new MutationObserver(this.HandleRemoveAddMutation.bind(this));
-		observer.observe(document.body, {childList: true});
+		observer.observe(document.body, {childList: true, subtree: true});
 
 		//Events for when we enter and exit vr
 		this.a_scene.addEventListener("enter-vr",this.enterVr.bind(this));
@@ -144,6 +147,14 @@ class Dom2Aframe{
 		window.requestAnimationFrame(this.UpdateAll.bind(this));
 	}
 
+	elementIsInList(list, element_name){
+		for(var i = 0; i < list.length; i++)
+			if(list[i] == element_name)
+				return true;
+
+		return false;
+	}
+
 	AddNewElement(element, has_separated_parent){
 		log("New element:")
 		log(element);
@@ -162,29 +173,18 @@ class Dom2Aframe{
 			return;
 		}*/
 
-		//Container element
-		if(element.tagName == "BODY" || element.tagName == "DIV" || element.tagName == "SECTION" || element.tagName == "NAV" || element.tagName == "UL" || element.tagName == "LI" || element.tagName == "HEADER" || element.tagName == "FORM" || element.tagName == "INPUT" || element.tagName == "ARTICLE")
+		if(this.elementIsInList(container_elements, element.tagName)) //Container element
 			new_a_element = new ContainerElement(element);
-
-		//Text based elements
-	    if(element.tagName == "P" || element.tagName == "A" || element.tagName == "BUTTON" || element.tagName == "SPAN" || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){
+	    else if(this.elementIsInList(text_elements, element.tagName) || typeof element.tagName == "string" && element.tagName.startsWith("H") && parseFloat(element.tagName.split("H")[1])){//Text based elements
 	    	new_a_element = new TextWithBackgroundElement(element);
 	    	//Because this element takes up 2 layers we increase the layer depth here
 			this.layer_depth += layer_difference;
-	    }
-	    
-	    //Images
-	    if(element.tagName == "IMG")
+	    }else if(element.tagName == "IMG") //Images
 	      new_a_element = new ImageElement(element);
-
+	    
 	    //Push the element in the array of all elements
 	    if(new_a_element != null){
-	    	this.a_element_container.appendChild(new_a_element.getAElement());
 	    	this.a_elements.push(new_a_element);
-
-	    	log(new_a_element);
-	    	log(this.layer_depth);
-
 	    	this.layer_depth += layer_difference;
 	    }
 
@@ -202,8 +202,10 @@ class Dom2Aframe{
 		var children = element.childNodes;
 		for(var i = 0; i < children.length; i++){
 			var child = this.AddNewNestedElement(children[i]);
-			if(child != undefined)
+			if(child != undefined){
 				parent.getAElement().appendChild(child.getAElement());
+				child.parent = parent.getAElement();
+			}
 		}
 
 		return parent;
@@ -215,18 +217,32 @@ class Dom2Aframe{
 			if(this.a_elements[i].getDomElement() == removed_element){
 				log("Element removed:");
 				log(this.a_elements[i]);
-				this.a_element_container.removeChild(this.a_elements[i].getAElement());
+				this.a_elements[i].parent.removeChild(this.a_elements[i].getAElement());
 
 				this.a_elements.splice(i,1);
 			}
 		}
 	}
 
+	DynamicalyAddElement(added_node){
+		var added_element = dom2aframe.AddNewNestedElement(added_node);
+
+    	log("Added dynamic item:");
+    	log(added_element);
+    	log("to:")
+    	log(added_node.parentElement);
+
+    	if(added_element != undefined && added_node.parentElement.aelement){
+        	added_node.parentElement.aelement.appendChild(added_element.getAElement());
+        	added_element.parent = added_node.parentElement.aelement;
+    	}
+	}
+
 	HandleRemoveAddMutation(mutations) {
 	    mutations.forEach(function(mutation) {
 	    	if(dom2aframe.dynamic_add_elements){
 		        for(var i = 0; i < mutation.addedNodes.length; i++){
-		            dom2aframe.AddNewNestedElement(mutation.addedNodes[i], false);
+		        	dom2aframe.DynamicalyAddElement(mutation.addedNodes[i]);
 		            dom2aframe.somethingdirty = true;
 		        }
 		    }
@@ -239,17 +255,7 @@ class Dom2Aframe{
 
 	//Creates an element for every dom element that is present in the body and the body itself
 	createAllElements(){
-		//Get all elements that exist in the body
-		/*var items = new Array(document.body);
-		var doc_items = document.body.getElementsByTagName("*");
-		for(var i = 0; i < doc_items.length; i++)
-			items.push(doc_items[i]);
-
-	    //Transcode every element in the page
-		for (i = 0; i < items.length; i++)
-			this.AddNewElement(items[i], false);*/
-
-		this.AddNewNestedElement(document.body);
+		this.a_element_container.appendChild(this.AddNewNestedElement(document.body).getAElement());
 
 		this.startLoop();
 	}

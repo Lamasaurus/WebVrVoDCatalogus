@@ -30,13 +30,13 @@
 			</div>
 
 			<nav class="sub">
-				<ul>
+				<ul id="subnav">
 					<li id="debug" show-player hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
 					<li play-video="video/MaryOculus.mp4" hover="navsubliapagehover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
 					<li play-video="video/city-4096-mp4-30fps-x264-ffmpeg.mp4" hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">Series</a></li>
 					<li hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">Kids</a></li>
-					<li hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page">Sport</a></li>
-					<li hover="navsubliapagehover" onclick="switchActive(this,1)"><a href="#" class="page passion">Passion</a></li>
+					<li hover="navsubliapagehover" onclick="switchActive(this,1); document.getElementById('subnav').removeChild(document.getElementsByClassName('generatedstuff')[0])"><a href="#" class="page">Sport</a></li>
+					<li hover="navsubliapagehover" onclick="switchActive(this,1); var el = document.createElement('li'); el.setAttribute('class','generatedstuff'); el.innerHTML = '<p>hahah!</p>'; document.getElementById('subnav').appendChild(el);"><a href="#" class="page passion">Passion</a></li>
 				</ul>
 			</nav>
 
