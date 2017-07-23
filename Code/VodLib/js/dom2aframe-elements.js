@@ -60,6 +60,7 @@ class Position{
 	}
 }*/
 
+//Represents a transformation (repositioning, scaling and rotation)
 class TransformationManager{
 	constructor(){
 		this.position = [0,0,0];
@@ -104,12 +105,12 @@ class Element{
         this.domelement.addEventListener("transitionstart", this.startAnimation.bind(this));
         this.domelement.addEventListener("transitionend", this.stopAnimation.bind(this));
 
-        this.position = new Position();
-        this.vr_position = [0,0,0];
-
         this.transformation = new TransformationManager();
 
         this.is_transparant = false;
+
+        //This gets checked to see if we need to separate the element or re-attach it to its parent
+        this.was_separate = false;
 
         //Flag for when we need to redraw
         this.dirty = true;
@@ -295,16 +296,6 @@ class Element{
         return this.position.top == position.top && this.position.height == position.height && this.position.left == position.left && this.position.width == position.width && this.position.z == position.z;
     }
 
-    //Set the subtree as separated
-    setSubtreeSeparate(){
-    	this.has_separated_parent = true;
-
-    	var children = this.domelement.childNodes;
-		for(var i = 0, len = children.length; i < len; i++)
-			if(children[i].setSubtreeSeparate)
-				children[i].setSubtreeSeparate();
-    }
-
     //Get the value of the style, or 0 of it is null
     getStyleValue(name, computed_style){
     	return computed_style.getPropertyValue(name).trim();
@@ -312,86 +303,79 @@ class Element{
 
     getTransormation(computed_style){
 
-    	this.updatePosition(this.getPosition());
+    	//Get the newest position data
+    	this.updatePosition();
 
-		if(this.is_separate){
-			var x = this.getStyleValue("--vr-x", computed_style);
-			if(x == "null")
-				x = this.position.vector[0];
+    	//Calculate special vr position
+		var x = this.getStyleValue("--vr-x", computed_style);
+		if(x == "null")
+			x = this.position.vector[0];
 
-			var y = this.getStyleValue("--vr-y", computed_style);
-			if(y == "null")
-				y = this.position.vector[1];
+		var y = this.getStyleValue("--vr-y", computed_style);
+		if(y == "null")
+			y = this.position.vector[1];
 
-			var z = this.getStyleValue("--vr-z", computed_style);
-			if(z == "null")
-				z = this.position.vector[2];
+		var z = this.getStyleValue("--vr-z", computed_style);
+		if(z == "null")
+			z = this.position.vector[2];
 
-			this.transformation.setPosition(x,y,z);
+		this.transformation.setPosition(x,y,z);
 
-			//If there is a special vr scale deffined, use that
-			var scale = computed_style.getPropertyValue("--vr-scale").trim();
-			if(scale != "null"){
-				scale = scale.split(" ");
+		//If there is a special vr scale deffined, use that
+		var scale = computed_style.getPropertyValue("--vr-scale").trim();
+		if(scale != "null"){
+			scale = scale.split(" ");
 
-				this.transformation.setScale(scale[0], scale[1]);
-			}
+			this.transformation.setScale(scale[0], scale[1]);
+		}
 
-			//If there is a special vr scale deffined, use that
-			var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
-			if(rotation != "null"){
-				rotation = rotation.split(" ");
+		//If there is a special vr scale deffined, use that
+		var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
+		if(rotation != "null"){
+			rotation = rotation.split(" ");
 
-				this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
-			}
+			this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
 		}
     }
 
-    //Update to the new position
-    updatePosition(position){
-    	/*if(this.is_separate)
-    		return;
-    	else if(this.has_separated_parent){
-    		if(this.position.left != position.left)
-    			this.vr_position.left -= 
-    	}*/
+    //Calc the position of the element relative to its parent
+    updatePosition(){
+	    this.position = new Position();
+		this.position.copyPosition(this.domelement.getBoundingClientRect());
 
-	    this.position = position;
-
-	    if(this.is_separate)
+	    if(this.is_separate)//The vr position is different from the page position if the element is separate
 	    	this.vr_position = this.transformation.position;
-	    else
+	    else if(this.domelement.tagName == "BODY")//The body should not take its parent in account 
 	    	this.vr_position = this.position.vector;
+	    else{
+	    	var parent_position = this.domelement.parentElement.getBoundingClientRect();
+
+			//Position the element relative to its parent
+			this.position.vector[0] -= parent_position.left + parent_position.width/2;
+			this.position.vector[1] -= parent_position.top + parent_position.height/2;
+
+	    	this.vr_position = this.position.vector;
+	    }
     }
 
-	//Calc the position of the element when separate 
-	getPosition(){
-		/*if(this.has_separated_parent){//If the element has a parent that is separated, we have to position it correctly
-			//Get the position or the parent on the html page and in vr space
-			var parent_page_position = this.domelement.parentElement.getBoundingClientRect();
-			var this.domelement.parentElement_vr_position = parent.vr_position;
-
-			//Calculate position of the element
-			this.vr_position.left = this.position.left - parent_page_position.left + parent_vr_position.left;
-			this.vr_position.top = this.position.top - parent_page_position.top + parent_vr_position.top;
-
-			this.vr_position.width = this.position.width;
-			this.vr_position.height = this.position.height;
-
-			this.vr_position.z = parent_vr_position.z;
-		}else{*/
-			var position = new Position();
-			position.copyPosition(this.domelement.getBoundingClientRect());
-			var parent_position = this.domelement.parentElement.getBoundingClientRect();
-			position.vector[0] -= parent_position.left + parent_position.width/2;
-			position.vector[1] -= parent_position.top + parent_position.height/2;
-
-			return position;
-		//}
-	}
-
+    //Check if the element has any special css property
 	checkIfSeparate(computed_style){
 		return computed_style.getPropertyValue("--vr-x").trim() !== "null" || computed_style.getPropertyValue("--vr-y").trim() !== "null" || computed_style.getPropertyValue("--vr-z").trim() !== "null" || computed_style.getPropertyValue("--vr-rotate").trim() !== "null" || computed_style.getPropertyValue("--vr-scale").trim() !== "null";
+	}
+
+	//Remove the element from its parent when it just got separated, or add it back to its parent when it stops beeïn separated
+	updateSeparated(){
+		if(this.was_separate){
+			this.was_separate = false;
+
+			this.parent.appendChild(this.aelement);
+		}else{
+			this.was_separate = true;
+
+			log(this);
+
+			dom2aframe.a_element_container.appendChild(this.aelement);
+		}
 	}
 
     //Generic update function
@@ -404,10 +388,15 @@ class Element{
 	        //Check if is separated now
 			this.is_separate = this.checkIfSeparate(element_style);
 
-			if(this.is_separate && !this.has_separated_parent)
-				this.setSubtreeSeparate();
-			if(this.is_separate || this.has_separated_parent)
+			if(this.is_separate != this.was_separate)//Check if the separate is still the same
+				this.updateSeparated();
+			if(this.is_separate){
 				this.getTransormation(element_style);
+
+				//Apply the transformation
+		    	this.aelement.setAttribute("scale", {x:this.transformation.scale[0], y:this.transformation.scale[1], z:1});
+		    	this.aelement.setAttribute("rotation", {x:this.transformation.rotation[0], y:this.transformation.rotation[1], z:this.transformation.rotation[2]});
+			}
 
 	        //Let the element update its own style
 	        this.elementSpecificUpdate(element_style);
@@ -419,14 +408,11 @@ class Element{
 	    	this.aelement.setAttribute("opacity", "");
 	    	this.aelement.setAttribute("opacity", new_opacity);
 
-	    	this.aelement.setAttribute("scale", {x:this.transformation.scale[0], y:this.transformation.scale[1], z:1});
-	    	this.aelement.setAttribute("rotation", {x:this.transformation.rotation[0], y:this.transformation.rotation[1], z:this.transformation.rotation[2]});
-
 	        this.dirty = false;
 	    }
 
         //Cash the new position
-        this.updatePosition(this.getPosition());
+        this.updatePosition();
         //Let the element update its own position
     	this.elementUpdatePosition();
     }
@@ -450,6 +436,9 @@ class TextElement extends Element{
         var y = -(this.position.height / 2 + this.vr_position[1])/pixels_per_meter;
 
         this.aelement.setAttribute("position",{x: x, y: y, z: layer_difference + this.vr_position[2]});
+
+        //The amount of pixels before it should wrap the text
+        this.aelement.setAttribute("wrapPixels",this.position.width/pixels_per_meter);
 	}
 
 	//Strips all tags from a string
@@ -615,7 +604,7 @@ class TextWithBackgroundElement extends Element{
 		this.atext.elementUpdatePosition();
 	}
 
-	elementSpecificUpdate(element_style){
+	elementSpecificUpdate(){
 		this.aplane.update();
 		this.atext.update();
 	}

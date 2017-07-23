@@ -5,14 +5,14 @@ class Camera{
 		//Camera gets placed to show the page directeley
 		this.aelement = document.createElement("a-camera");
 		//The z distance gets calculated with a/sin(A) = c/sin(C) where c is the z distance and a the body width / 2, A = 50° C = 40°
-		this.camera_distance = 0.50;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
+		this.camera_distance = 0.71;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
 		this.aelement.setAttribute("user-height", "0");
 		this.aelement.setAttribute("fov", "80");
 		this.aelement.setAttribute("far", "10000");
 		this.aelement.setAttribute("near", "0.01");
 		this.aelement.setAttribute("stereocam","eye:left;");
 		this.aelement.setAttribute("wasd-controls-enabled", "true");
-		this.setPosition({x: (body_width/2), y: (-body_width/4), z:this.camera_distance});
+		this.setPosition({x: body_width/2, y: -0.05, z:this.camera_distance});
 
 		//Cursor
 		this.cursor = document.createElement("a-cursor");

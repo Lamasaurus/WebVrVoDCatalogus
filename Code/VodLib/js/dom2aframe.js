@@ -155,7 +155,7 @@ class Dom2Aframe{
 		return false;
 	}
 
-	AddNewElement(element, has_separated_parent){
+	AddNewElement(element){
 		log("New element:")
 		log(element);
 		var new_a_element = null;
@@ -166,12 +166,6 @@ class Dom2Aframe{
 		//Some random element gets spawned and deleted immediately after, I don't see where it comes from or what its purpose is, but it gives errors. Now they don't get added
 		if(element.innerHTML == '<div classname="t" onsubmit="t" onchange="t" onfocusin="t" style="margin: 0px; border: 0px; box-sizing: content-box; width: 1px; padding: 1px; display: block; zoom: 1;"><div style="width: 5px;"></div></div>')
 			return;
-
-		//If an element is separate, the children should be separate to
-		/*if((element.hasAttribute("separate") || element.hasAttribute("vr-z")) && !has_separated_parent){
-			this.AddNewNestedElement(element, true);
-			return;
-		}*/
 
 		if(this.elementIsInList(container_elements, element.tagName)) //Container element
 			new_a_element = new ContainerElement(element);
@@ -194,6 +188,9 @@ class Dom2Aframe{
 
 	//Adds the element and then recursively calls this function on its direct children
 	AddNewNestedElement(element){
+		if(element.tagName == "A-SCENE")
+			return;
+		
 		var parent = this.AddNewElement(element);
 
 		if(parent == null)
@@ -203,8 +200,8 @@ class Dom2Aframe{
 		for(var i = 0; i < children.length; i++){
 			var child = this.AddNewNestedElement(children[i]);
 			if(child != undefined){
-				parent.getAElement().appendChild(child.getAElement());
 				child.parent = parent.getAElement();
+				parent.getAElement().appendChild(child.getAElement());
 			}
 		}
 
@@ -226,11 +223,6 @@ class Dom2Aframe{
 
 	DynamicalyAddElement(added_node){
 		var added_element = dom2aframe.AddNewNestedElement(added_node);
-
-    	log("Added dynamic item:");
-    	log(added_element);
-    	log("to:")
-    	log(added_node.parentElement);
 
     	if(added_element != undefined && added_node.parentElement.aelement){
         	added_node.parentElement.aelement.appendChild(added_element.getAElement());
