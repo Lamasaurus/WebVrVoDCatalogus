@@ -5,14 +5,16 @@ class Camera{
 		//Camera gets placed to show the page directeley
 		this.aelement = document.createElement("a-camera");
 		//The z distance gets calculated with a/sin(A) = c/sin(C) where c is the z distance and a the body width / 2, A = 50° C = 40°
-		this.camera_distance = 0.71;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
+		this.camera_distance = 2;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
 		this.aelement.setAttribute("user-height", "0");
 		this.aelement.setAttribute("fov", "80");
 		this.aelement.setAttribute("far", "10000");
 		this.aelement.setAttribute("near", "0.01");
 		this.aelement.setAttribute("stereocam","eye:left;");
 		this.aelement.setAttribute("wasd-controls-enabled", "true");
-		this.setPosition({x: body_width/2, y: -0.05, z:this.camera_distance});
+		this.setPosition({x: body_width/2, y: -1.8, z:this.camera_distance});
+
+		this.has_cursor = true;
 
 		//Cursor
 		this.cursor = document.createElement("a-cursor");
@@ -24,7 +26,6 @@ class Camera{
 		this.cursor.setAttribute("geometry", "primitive: ring; radiusInner: 0.0005; radiusOuter: 0.001")
 		this.cursor.setAttribute("raycaster","objects: .clickable; far: 90;")
 		this.aelement.appendChild(this.cursor);
-		
 
 		//Cursor animations, triggers an animation and thus updateall. Thats why it is in comments
 		/*click_animation = document.createElement("a-animation");
@@ -51,15 +52,27 @@ class Camera{
 		cursor.appendChild(fuse_animation);*/
 	}
 
+	addCursor(){
+		this.aelement.appendChild(this.cursor);
+	}
+
+	removeCursor(){
+		if(this.has_cursor){
+			this.aelement.removeChild(this.cursor);
+			this.has_cursor = false;
+		}
+	}
+
 	getAElement(){
 		return this.aelement;
 	}
 
 	getPosition(){
-		return this.aelement.getAttribute("position");
+		return this.position;
 	}
 
 	setPosition(position){
+		this.position = position;
 		this.aelement.setAttribute("position", position);
 	}
 

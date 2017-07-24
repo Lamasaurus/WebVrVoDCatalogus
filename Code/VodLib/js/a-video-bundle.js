@@ -96,7 +96,7 @@ class VideoElement{
 		this.righteye.setAttribute("geometry","primitive: sphere; radius: 80; segmentsWidth: 64; segmentsHeight: 64;");
 		this.righteye.setAttribute("material","shader:flat; src:#"+source+";");
 		this.righteye.setAttribute("scale","-1 1 1");
-		this.righteye.setAttribute("stereo","eye:left");
+		this.righteye.setAttribute("stereo","eye:right");
 		this.righteye.setAttribute("visible","false");
 		this.video_element.appendChild(this.righteye);
 

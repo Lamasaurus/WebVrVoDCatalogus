@@ -326,12 +326,16 @@ class Element{
 		if(scale != "null"){
 			scale = scale.split(" ");
 
-			this.transformation.setScale(scale[0], scale[1]);
+			if(scale.length == 1)//If the user just gave one scale
+				this.transformation.setScale(scale[0], scale[0]);
+			else if(scale.length == 2)//If the user gave a scale for x and y separately
+				this.transformation.setScale(scale[0], scale[1]); 
 		}
 
 		//If there is a special vr scale deffined, use that
 		var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
 		if(rotation != "null"){
+			log(rotation);
 			rotation = rotation.split(" ");
 
 			this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);

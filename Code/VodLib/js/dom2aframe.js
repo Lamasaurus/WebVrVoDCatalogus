@@ -5,13 +5,13 @@ var debugging = true;
 var animation_fps = 30;
 
 //The size of the CSS refference pixel
-var pixels_per_meter = 1000/0.26;
+var pixels_per_meter = 100/0.26;
 
 //The depth difference between elements in meter
-var layer_difference = 0.00001;
+var layer_difference = 0.0001;
 
-var text_elements = ["P","CAPTION","cite","B","CODE","I","A","BUTTON","SPAN","LABEL","STRONG","U","SUB","SUP","SUMMARY","SMALL","SAMP","EM","KBD","VAR","S","Q","PRE","MARK","INS","FIGCAPTION","DT","DL","DFN","DEL","DD","CAPTION","BLOCKQUOTE","ADDRESS","ADDR"];
-var container_elements = ["BODY","DIV","SECTION","NAV","UL","LI","HEADER","FORM","INPUT","ARTICLE","TABLE","TR","TH","TBODY","THEAD","TFOOT","TD","PROGRESS","MAIN","HR","FOOTER","FIGURE","PICTURE","ASIDE"];
+var text_elements = ["P","CAPTION","cite","B","CODE","I","A","BUTTON","SPAN","LABEL","STRONG","U","SUB","SUP","SUMMARY","SMALL","SAMP","EM","KBD","VAR","S","Q","PRE","MARK","INS","FIGCAPTION","DT","DL","DFN","DEL","DD","CAPTION","BLOCKQUOTE","ADDRESS","ADDR","TD","TH"];
+var container_elements = ["BODY","DIV","SECTION","NAV","UL","LI","HEADER","FORM","INPUT","ARTICLE","TABLE","TR","TBODY","THEAD","TFOOT","PROGRESS","MAIN","HR","FOOTER","FIGURE","PICTURE","ASIDE"];
 
 var dom2aframe;
 var asset_manager;
@@ -37,6 +37,8 @@ class Dom2Aframe{
 		this.a_scene = document.createElement("a-scene");
 		//Set embedded so it can be part of the dom page
 		this.a_scene.setAttribute("embedded");
+		//this.a_scene.innerHTML = "<a-entity vive-controls='hand: left'></a-entity><a-entity vive-controls='hand: right'></a-entity>";
+		//this.a_scene.innerHTML = "<a-entity laser-controls='hand: left'></a-entity>";
 
 	    //Append assets
 	    this.a_scene.appendChild(asset_manager.getAElement());
@@ -102,9 +104,10 @@ class Dom2Aframe{
 	}
 
 	initControllerSupport(){
-		var controller_support = document.createElement("a-entity");
-		controller_support.setAttribute("laser-controls");
-		this.a_scene.appendChild(controller_support);
+		var controllers = new Controllers(this.camera);
+		controllers.setPosition(this.camera.getPosition());
+
+		this.a_scene.appendChild(controllers.aelement);
 	}
 
 	initEvents(){
