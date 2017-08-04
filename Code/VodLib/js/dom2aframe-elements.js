@@ -90,7 +90,6 @@ class Element{
 		
 		//Make sure dom elements can tell theyr children to update
 		this.domelement.setSubtreeDirty = () => { this.setSubtreeDirty(); };
-		this.domelement.setSubtreeSeparate = () => { this.setSubtreeSeparate(); };
 		this.aelement = null;
 
         //Listenes for direct css changes
@@ -271,18 +270,11 @@ class Element{
 	        if(mutation[i].oldValue === this.domelement.getAttribute(mutation[i].attributeName))
 	        	continue;
 
-	        /*log("Mutated element:")
-	    	log(this);
-	    	log("Mutation:")
-	    	log(mutation[i]);*/
-
 	    	//Check if the elements style and possibly the style of its children changed
 	        if(mutation[i].type === "attributes" && (mutation[i].attributeName === "class" || mutation[i].attributeName === "style"))
 	        	this.setSubtreeDirty();
 	        else
 	        	this.setDirty();
-
-	        //this.update();
 	    }
     }
 
@@ -302,20 +294,29 @@ class Element{
     }
 
     getTransormation(computed_style){
-
     	//Get the newest position data
     	this.updatePosition();
 
     	//Calculate special vr position
 		var x = this.getStyleValue("--vr-x", computed_style);
+		if(x == "null" && !this.is_separate)
+			x = 0;
 		if(x == "null")
 			x = this.position.vector[0];
+		else
+			x *= pixels_per_meter;
 
 		var y = this.getStyleValue("--vr-y", computed_style);
+		if(y == "null" && !this.is_separate)
+			y = 0;
 		if(y == "null")
 			y = this.position.vector[1];
+		else
+			y *= pixels_per_meter;
 
 		var z = this.getStyleValue("--vr-z", computed_style);
+		if(z == "null" && !this.is_separate)
+			z = 0;
 		if(z == "null")
 			z = this.position.vector[2];
 
@@ -330,7 +331,8 @@ class Element{
 				this.transformation.setScale(scale[0], scale[0]);
 			else if(scale.length == 2)//If the user gave a scale for x and y separately
 				this.transformation.setScale(scale[0], scale[1]); 
-		}
+		}else
+			this.transformation.setScale(1, 1); 
 
 		//If there is a special vr scale deffined, use that
 		var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
@@ -339,7 +341,8 @@ class Element{
 			rotation = rotation.split(" ");
 
 			this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
-		}
+		}else
+			this.transformation.setRotate(0, 0, 0);
     }
 
     //Calc the position of the element relative to its parent
@@ -354,9 +357,10 @@ class Element{
 	    else{
 	    	var parent_position = this.domelement.parentElement.getBoundingClientRect();
 
-			//Position the element relative to its parent
-			this.position.vector[0] -= parent_position.left + parent_position.width/2;
-			this.position.vector[1] -= parent_position.top + parent_position.height/2;
+			//Position the element relative to its parent and factoring the --vr-relative properties in
+			this.position.vector[0] -= parent_position.left + parent_position.width/2 - this.transformation.position[0];
+			this.position.vector[1] -= parent_position.top + parent_position.height/2 - this.transformation.position[1];
+			this.position.vector[2] += this.transformation.position[2];
 
 	    	this.vr_position = this.position.vector;
 	    }
@@ -364,7 +368,7 @@ class Element{
 
     //Check if the element has any special css property
 	checkIfSeparate(computed_style){
-		return computed_style.getPropertyValue("--vr-x").trim() !== "null" || computed_style.getPropertyValue("--vr-y").trim() !== "null" || computed_style.getPropertyValue("--vr-z").trim() !== "null" || computed_style.getPropertyValue("--vr-rotate").trim() !== "null" || computed_style.getPropertyValue("--vr-scale").trim() !== "null";
+		return computed_style.getPropertyValue("--vr-position").trim() === "absolute";
 	}
 
 	//Remove the element from its parent when it just got separated, or add it back to its parent when it stops beeïn separated
@@ -375,8 +379,6 @@ class Element{
 			this.parent.appendChild(this.aelement);
 		}else{
 			this.was_separate = true;
-
-			log(this);
 
 			dom2aframe.a_element_container.appendChild(this.aelement);
 		}
@@ -394,13 +396,12 @@ class Element{
 
 			if(this.is_separate != this.was_separate)//Check if the separate is still the same
 				this.updateSeparated();
-			if(this.is_separate){
-				this.getTransormation(element_style);
 
-				//Apply the transformation
-		    	this.aelement.setAttribute("scale", {x:this.transformation.scale[0], y:this.transformation.scale[1], z:1});
-		    	this.aelement.setAttribute("rotation", {x:this.transformation.rotation[0], y:this.transformation.rotation[1], z:this.transformation.rotation[2]});
-			}
+			this.getTransormation(element_style);
+
+			//Apply the scale and rotation
+	    	this.aelement.setAttribute("scale", {x:this.transformation.scale[0], y:this.transformation.scale[1], z:1});
+	    	this.aelement.setAttribute("rotation", {x:this.transformation.rotation[0], y:this.transformation.rotation[1], z:this.transformation.rotation[2]});
 
 	        //Let the element update its own style
 	        this.elementSpecificUpdate(element_style);

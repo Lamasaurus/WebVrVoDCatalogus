@@ -8,7 +8,7 @@ class Camera{
 		this.camera_distance = 2;//((body_width/2)*0.64278760968653932632264340990726343290755988420568179032)/0.76604444311897803520239265055541667393583245708039524585;
 		this.aelement.setAttribute("user-height", "0");
 		this.aelement.setAttribute("fov", "80");
-		this.aelement.setAttribute("far", "10000");
+		this.aelement.setAttribute("far", "1000000");
 		this.aelement.setAttribute("near", "0.01");
 		this.aelement.setAttribute("stereocam","eye:left;");
 		this.aelement.setAttribute("wasd-controls-enabled", "true");

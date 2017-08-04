@@ -217,9 +217,12 @@ class Dom2Aframe{
 			if(this.a_elements[i].getDomElement() == removed_element){
 				log("Element removed:");
 				log(this.a_elements[i]);
-				this.a_elements[i].parent.removeChild(this.a_elements[i].getAElement());
 
-				this.a_elements.splice(i,1);
+				if(this.a_elements[i].parent){
+					this.a_elements[i].parent.removeChild(this.a_elements[i].getAElement());
+				}
+
+					this.a_elements.splice(i,1);
 			}
 		}
 	}
@@ -227,7 +230,9 @@ class Dom2Aframe{
 	DynamicalyAddElement(added_node){
 		var added_element = dom2aframe.AddNewNestedElement(added_node);
 
-    	if(added_element != undefined && added_node.parentElement.aelement){
+		log(added_element);
+
+    	if(added_element != undefined && added_node.parentElement && added_node.parentElement.aelement){
         	added_node.parentElement.aelement.appendChild(added_element.getAElement());
         	added_element.parent = added_node.parentElement.aelement;
     	}
