@@ -18,8 +18,8 @@ function createCategory(category) {
 		"<header>" +
 		"\t<span class=\"sectiontooltip\" data-tip=\"0 films\">" + category.name + "</span>" +
 		"</header>" +
-		"<div style=\"width: 980px; height: 278px; overflow: hidden;\" class=\"main carouselMain\">" +
-		"\t<div style=\"height: 278px; transition: all 0s none;\" class=\"carouselWrapper\" data-id=\"" + category.id + "\"></div>" +
+		"<div class=\"main carouselMain\">" +
+		"\t<div style='overflow: hidden;' class=\"carouselWrapper\" data-id=\"" + category.id + "\"></div>" +
 		"</div>" +
 		"<header>" +
 		"\t<div class=\"pager\">" +
@@ -39,12 +39,7 @@ function createArticle(film) {
 	article.setAttribute("itemscope", "itemscope");
 	addClass(article, "vod");
 	addClass(article, "thumb");
-	article.innerHTML = "" +
-		"<a itemprop=\"url\" href=\"#\">" +
-		"\t<div class=\"main\">" +
-		"\t\t\t\t\t\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + ");\" onmouseenter=\"this.setAttribute(\'vr-z\',Number(this.getAttribute(\'vr-z\'))+0.05);\" onmouseleave=\"this.setAttribute(\'vr-z\',Number(this.getAttribute(\'vr-z\'))-0.05);\" return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
-		"\t</div>" +
-		"</a>";
+	article.innerHTML = "\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + ");\" onmouseenter=\"this.setAttribute('style', '--vr-z: 0.1;');\" onmouseleave=\"this.setAttribute('style', '--vr-z:;');\" return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">";
 
 	return article;
 }
@@ -81,7 +76,7 @@ function storeFilms(categoryId, data) {
 	if ( section ) {
 		let containerDiv = section.getElementsByClassName("carouselWrapper")[0];
 		if ( containerDiv ) {
-			containerDiv.style.width = (data.length * articleWidth) + "px";
+			//containerDiv.style.width = (data.length * articleWidth) + "px";
 		} else {
 			console.error("Can't find 'carouselWrapper' div of category id " + categoryId);
 		}
@@ -133,8 +128,8 @@ function addSpecsForFilmPopup(label, spec) {
 
 	return "" +
 		"\t\t\t\t\t<div class=\"spec\">" +
-		"\t\t\t\t\t\t<div class=\"label\">" + label + "</div>" +
-		"\t\t\t\t\t\t<div class=\"value\">" + spec + "</div>" +
+		"\t\t\t\t\t\t<p class=\"label\">" + label + "</p>" +
+		"\t\t\t\t\t\t<p class=\"value\">" + spec + "</p>" +
 		"\t\t\t\t\t</div>";
 }
 
@@ -188,25 +183,19 @@ function createPopupArticle(film) {
 		"\t\t\t<h1><span itemprop=\"name\">" + film["title"] + "</span></h1>" +
 		"\t\t</div>" +
 		"\t</header>" +
-		"\t<div style=\"overflow: hidden; cursor: hand; position: relative;\" class=\"main\">" +
-		"\t\t<div style=\"top: 0px; position: absolute; background-color: black; width: 8px; height: 350px; border-radius: 4px; margin: 0px 0px 0px 617px; z-index: 999;\" class=\"scrollThumb\"></div>" +
+		"\t<div class=\"main\">" +
+		"\t\t<div class=\"scrollThumb\"></div>" +
 		"\t\t<div class=\"wrap\">" +
-		"\t\t\t<div class=\"wrap2\">" +
 		"\t\t\t\t<div class=\"image thumb\">" +
-		"\t\t\t\t\t<div class=\"graphic\">" +
 		"\t\t\t\t\t\t<img src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
-		"\t\t\t\t\t</div>" +
 		"\t\t\t\t</div>" +
-		"\t\t\t</div>" +
 		"\t\t\t<section class=\"fiche info\">" +
-		"\t\t\t\t<div class=\"ficheMain\">" +
 		addSpecsForFilmPopup("Regie", film["directors"]) +
 		addSpecsForFilmPopup("Duur", duration) +
 		addSpecsForFilmPopup("Jaar", film["yearofproduction"]) +
 		addSpecsForFilmPopup("Genre", film["genre"]) +
 		addSpecsForFilmPopup("Taal", film["mainlanguage"]) +
 		addSpecsForFilmPopup("Cast", film["actors"]) +
-		"\t\t\t\t</div>" +
 		"\t\t\t</section>" +
 		"\t\t\t<div class=\"iconList\">" +
 		"\t\t\t\t<ul>" + icons + "</ul>" +
@@ -416,12 +405,14 @@ function init() {
 		let sequence = Promise.resolve();
 		let parallelPromises = [];
 
-		let categoryContainer = document.getElementById("carouselContainer");
+		let categoryContainer = document.getElementById("posters");
+		console.log("Hier");
+		console.log(document.getElementById("posters"));
 		categoryCount = 0;
 
-		let styling = document.createElement("style");
+		/*let styling = document.createElement("style");
 		styling.setAttribute("id","animations");
-		document.body.appendChild(styling);
+		document.body.appendChild(styling);*/
 
 		for ( let categoryId in categories ) {
 			if ( categories.hasOwnProperty(categoryId) ) {

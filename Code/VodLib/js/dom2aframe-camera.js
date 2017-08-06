@@ -12,7 +12,7 @@ class Camera{
 		this.aelement.setAttribute("near", "0.01");
 		this.aelement.setAttribute("stereocam","eye:left;");
 		this.aelement.setAttribute("wasd-controls-enabled", "true");
-		this.setPosition({x: body_width/2, y: -1.8, z:this.camera_distance});
+		this.setPosition({x: body_width/2, y: -1, z:this.camera_distance});
 
 		this.has_cursor = true;
 

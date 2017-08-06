@@ -36,9 +36,7 @@ class Dom2Aframe{
 	    //The a-scene that will contain all A-frame code
 		this.a_scene = document.createElement("a-scene");
 		//Set embedded so it can be part of the dom page
-		this.a_scene.setAttribute("embedded");
-		//this.a_scene.innerHTML = "<a-entity vive-controls='hand: left'></a-entity><a-entity vive-controls='hand: right'></a-entity>";
-		//this.a_scene.innerHTML = "<a-entity laser-controls='hand: left'></a-entity>";
+		//this.a_scene.setAttribute("embedded",'');
 
 	    //Append assets
 	    this.a_scene.appendChild(asset_manager.getAElement());
@@ -123,11 +121,11 @@ class Dom2Aframe{
 	initStyles(){
 		//Inject css to get the VR button fixed and the a-scene on top of everything and defining the custom vr properties
 	    this.vrcss = document.createElement('style');
-	    this.vrcss.innerHTML = "*{--vr-x:null;--vr-y:null;--vr-z:null;--vr-scale:null;--vr-rotate:null;} .a-enter-vr{position: fixed;} a-scene{position:fixed; top:0;}";
+	    this.vrcss.innerHTML = "*{--vr-x:null;--vr-y:null;--vr-z:null;--vr-scale:null;--vr-rotate:null;--vr-position:null;} .a-enter-vr{position: fixed;} .a-scene{position:fixed; top:0;} .a-html{ position: static; } .a-body{ height: initial; margin: 0px; overflow: initial; padding: initial; width: initial; }";
 	    document.body.appendChild(this.vrcss);
 
 	    //Style that changes when in vr
-		this.invr_css = ".a-canvas{display: default;} a-scene{width: 100%; height: 100%;} *{user-select: none;}";
+		this.invr_css = ".a-canvas{display: default; position: fixed; } a-scene{width: 100%; height: 100%;} *{user-select: none;}";
 		this.outvr_css = ".a-canvas{display: none;} a-scene{width: auto; height: auto;}";
 	    this.changing_style = document.createElement('style');
 	    this.changing_style.innerHTML = this.outvr_css;

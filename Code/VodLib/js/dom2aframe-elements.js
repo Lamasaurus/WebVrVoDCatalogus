@@ -22,44 +22,6 @@ class Position{
     }
 }
 
-/*class TransformationMatrixManager{
-	constructor(){
-		this.reset();
-	}
-
-	reset(){
-		this.matrix = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
-	}
-
-	translate(x,y,z){
-		this.matrix = math.multiply([[1,0,0,x],[0,1,0,y],[0,0,1,z],[0,0,0,1]], this.matrix);
-	}
-
-	scale(x,y){
-		this.matrix = math.multiply([[x,0,0,0],[0,y,0,0],[0,0,1,0],[0,0,0,1]], this.matrix);
-	}
-
-	rotate(x,y,z){
-		//rotate x
-		this.matrix = math.multiply([[1,0,0,0],
-								[0,Math.cos(x),-Math.sin(x),0],
-								[0,Math.sin(x),Math.cos(x),0],
-								[0,0,0,1]], this.matrix);
-
-		//rotate y
-		this.matrix = math.multiply([[Math.cos(y),0,Math.sin(y),0],
-								[0,1,0,0],
-								[-Math.sin(y),1,Math.cos(y),0],
-								[0,0,0,1]], this.matrix);
-
-		//rotate z
-		this.matrix = math.multiply([[Math.cos(x),-Math.sin(x),0,0],
-								[Math.sin(x),Math.cos(3),0,0],
-								[0,0,1,0],
-								[0,0,0,1]], this.matrix);
-	}
-}*/
-
 //Represents a transformation (repositioning, scaling and rotation)
 class TransformationManager{
 	constructor(){
@@ -337,7 +299,6 @@ class Element{
 		//If there is a special vr scale deffined, use that
 		var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
 		if(rotation != "null"){
-			log(rotation);
 			rotation = rotation.split(" ");
 
 			this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
@@ -496,9 +457,9 @@ class ContainerElement extends Element{
 		this.width = this.position.width/pixels_per_meter;
 		this.height = this.position.height/pixels_per_meter;
 
-		//Calculate y and x position
-		var y = -this.vr_position[1]/pixels_per_meter - this.height/2;
+		//Calculate x and y position
 		var x = this.vr_position[0]/pixels_per_meter + this.width/2;
+		var y = -this.vr_position[1]/pixels_per_meter - this.height/2;
 
 		this.aelement.setAttribute('position', {x: x, y: y, z: layer_difference + this.vr_position[2]});
 
@@ -567,7 +528,7 @@ class ImageElement extends Element{
 		this.aelement.setAttribute("height", height);
 
 		//Calculate the x position
-		var x = this.vr_position[0]/pixels_per_meter;
+		var x = this.vr_position[0]/pixels_per_meter + width/2;
 		//Calculate the y position
 		var y = -this.vr_position[1]/pixels_per_meter - height/2;
 

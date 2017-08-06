@@ -1,0 +1,20 @@
+body{
+	background-color: #7c7000;
+	color: white;
+}
+
+.thumb img{
+	width: 100%;
+}
+
+.thumb{
+	float: left;
+}
+
+#ovrVOD{
+	width: 400px;
+	--vr-position: absolute;
+	--vr-z: 0.3;
+	--vr-x: 0;
+	--vr-y: 0;
+}
