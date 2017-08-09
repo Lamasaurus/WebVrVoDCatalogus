@@ -1,10 +1,33 @@
 body{
-	background-color: #7c7000;
-	color: white;
+	/*background-color: #7c7000;*/
+	color: #fff;
+}
+
+.carouselWrapper article{
+	width: 20%;
 }
 
 .thumb img{
-	width: 100%;
+	width: 90%;
+	margin-top: 10px;
+}
+
+@keyframes gofront {
+	10% {--vr-z: 0.01;}
+	20% {--vr-z: 0.02;}
+	30% {--vr-z: 0.03;}
+	40% {--vr-z: 0.04;}
+	50% {--vr-z: 0.05;}
+	60% {--vr-z: 0.06;}
+	70% {--vr-z: 0.07;}
+	80% {--vr-z: 0.08;}
+	90% {--vr-z: 0.09;}
+    100% { --vr-z: 0.1; }
+}
+
+.thumb .hover{
+	/*--vr-z: 0.1;*/
+	animation: gofront 0.1s forwards;
 }
 
 .thumb{
@@ -12,9 +35,133 @@ body{
 }
 
 #ovrVOD{
-	width: 400px;
+	width: 700px;
 	--vr-position: absolute;
-	--vr-z: 0.3;
+	--vr-z: 0.5;
 	--vr-x: 0;
-	--vr-y: 0;
+	--vr-y: .1;
+}
+
+.fiche .label{
+	font-weight: bold;
+	float: left;
+	width: 20%;
+}
+
+.fiche .value{
+	float: left;
+	width: 80%;
+}
+
+#ovrVOD .image ,.popupinfo{
+	float: left;
+}
+
+#ovrVOD .image{
+	width: 30%;
+}
+
+.popupinfo{
+	width: 65%;
+	overflow: hidden;
+	margin-left: 12px;
+}
+
+.info{
+	overflow: hidden;
+}
+
+.info .spec{
+	clear:both;
+	overflow: hidden;
+	width: 100%;
+}
+
+.info .spec p{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.overlay .main .wrap .description{
+	clear: both;
+	padding-top: 10px;
+}
+
+.overlay .main .wrap{
+	overflow: hidden;
+}
+
+.overlay{
+	padding: 2%;
+	background-color: #272727;
+	border-radius: 1%;
+}
+
+.overlay .iconList ul{
+	list-style: none;
+	overflow: hidden;
+	padding: 0;
+}
+
+.overlay .iconList ul li{
+	float: left;
+	margin-right: 5px;
+}
+
+.overlay .titleWrap h1{
+	margin: 0;
+	font-size: 40px;
+}
+
+.popupheader{
+	font-size: 50px;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.fadein{
+    animation: fadein 1s forwards;
+}
+
+#navigation{
+	width: 100%;
+}
+
+#navigation .sub{
+	--vr-position: absolute;
+	--vr-x:-0.8;
+	--vr-y:0.6;
+	--vr-z:-0.6;
+	--vr-rotate:0 80 0;
+}
+
+#subnav {
+	width: 300px;
+	list-style: none;
+	font-size: 30px;
+	padding: 0;
+}
+
+#subnav li a{
+	text-decoration: none;
+	color: #fff;
+	width:100%;
+}
+
+#subnav .active a, #subnav .hover, #subnav .hover a{
+	color: #ffc421;
+}
+
+.speelnuknop{
+	width: 100px;
+	height: 34px;
+	margin: auto;
+	background-image: url('img/kijknu-noactive.svg');
+}
+
+.speelnuknop.hover{
+	background-image: url('img/kijknu-active.svg');
 }

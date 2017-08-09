@@ -84,6 +84,8 @@ class Element{
 
 		this.aelement.domelement = this.domelement;
 		this.domelement.aelement = this.aelement;
+
+		this.aelement.setAttribute("material","alphaTest: 0.5");
 	}
 
 	//Returns true if attribute existes and the functionality can be used
@@ -242,7 +244,7 @@ class Element{
 
     //Returns if an element is visible, el.offsetParent is null if a parent is invisible but the body always has a null value with this
 	isNotHidden(el, style){
-		return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none" && !this.is_transparant);
+		return ((el.tagName === "BODY" || el.offsetParent !== null) && style.getPropertyValue("visibility") !== "hidden" && style.getPropertyValue("display") !== "none");
 	}
 
 	//Compares the position with its own position, returns true if they are the same
@@ -263,23 +265,31 @@ class Element{
 		var x = this.getStyleValue("--vr-x", computed_style);
 		if(x == "null" && !this.is_separate)
 			x = 0;
-		if(x == "null")
+		else if(x == "null")
 			x = this.position.vector[0];
-		else
+		else if(!this.is_separate)
 			x *= pixels_per_meter;
+		else{
+			x -= (this.position.width/pixels_per_meter)/2;
+			x *= pixels_per_meter;
+		}
 
 		var y = this.getStyleValue("--vr-y", computed_style);
 		if(y == "null" && !this.is_separate)
 			y = 0;
-		if(y == "null")
+		else if(y == "null")
 			y = this.position.vector[1];
-		else
+		else if(!this.is_separate)
 			y *= pixels_per_meter;
+		else{
+			y -= (this.position.height/pixels_per_meter)/2;
+			y *= pixels_per_meter;
+		}
 
 		var z = this.getStyleValue("--vr-z", computed_style);
 		if(z == "null" && !this.is_separate)
 			z = 0;
-		if(z == "null")
+		else if(z == "null")
 			z = this.position.vector[2];
 
 		this.transformation.setPosition(x,y,z);
@@ -313,9 +323,10 @@ class Element{
 
 	    if(this.is_separate)//The vr position is different from the page position if the element is separate
 	    	this.vr_position = this.transformation.position;
-	    else if(this.domelement.tagName == "BODY")//The body should not take its parent in account 
+	    else if(this.domelement.tagName == "BODY"){//The body should not take its parent in account 
+	    	this.position.vector[0] -= this.position.width/2;
 	    	this.vr_position = this.position.vector;
-	    else{
+	    }else{
 	    	var parent_position = this.domelement.parentElement.getBoundingClientRect();
 
 			//Position the element relative to its parent and factoring the --vr-relative properties in
@@ -369,8 +380,22 @@ class Element{
 
 	        //Set the opacity of the element
 	        var new_opacity = 0;
-	        if(this.isNotHidden(this.domelement, element_style))
-	            new_opacity = parseFloat(element_style.getPropertyValue("opacity"));
+
+	        //If the element is not hidden, we have to get the elements opacity
+	        if(this.isNotHidden(this.domelement, element_style)){
+	        	if(this.domelement.tagName != "BODY" && !this.is_separate && parseFloat(this.domelement.parentElement.vr_opacity) != NaN)//If the parent has a opacity set, then the children can get max that opacity
+	        		new_opacity = parseFloat(this.domelement.parentElement.vr_opacity) * parseFloat(element_style.getPropertyValue("opacity"));
+	        	else
+	        		new_opacity = parseFloat(element_style.getPropertyValue("opacity"));
+	        }
+
+	        //Now we set the opacity in the dom element so that we can get to it from its children
+	        this.domelement.vr_opacity = new_opacity;
+
+	        //If the element is transparant, the elements transparency is also set, this has to be after the vr_opacity is set on the dom element, else we get wrong readings
+	        if(this.is_transparant)
+	        	new_opacity = 0;
+
 	    	this.aelement.setAttribute("opacity", "");
 	    	this.aelement.setAttribute("opacity", new_opacity);
 
@@ -404,7 +429,7 @@ class TextElement extends Element{
         this.aelement.setAttribute("position",{x: x, y: y, z: layer_difference + this.vr_position[2]});
 
         //The amount of pixels before it should wrap the text
-        this.aelement.setAttribute("wrapPixels",this.position.width/pixels_per_meter);
+        this.aelement.setAttribute("width",this.position.width/pixels_per_meter);
 	}
 
 	//Strips all tags from a string
@@ -429,11 +454,14 @@ class TextElement extends Element{
 	    	this.is_transparant = true;
 	    }
 
-		this.aelement.setAttribute("width",0);
+	    this.aelement.setAttribute("wrap-count",0);
+	    this.aelement.setAttribute("wrap-pixels",(this.position.width) / (parseFloat(element_style.getPropertyValue("font-size")) / 52));
+
+		/*this.aelement.setAttribute("width",0);
 		//The width of the text element determins the size of the text, so we have to convert font-size to width
         var width = (1/pixels_per_meter * parseFloat(element_style.getPropertyValue("font-size"))) * 20;
         if(width != this.aelement.getAttribute("width"))
-        	this.aelement.setAttribute("width",width);
+        	this.aelement.setAttribute("width",width);*/
 
         //First reset the anchor to nothing and then back to left
 		this.aelement.setAttribute("anchor","");
@@ -482,8 +510,6 @@ class ContainerElement extends Element{
 		//If the background image is just "n" it means that there  was none
 		if(background_image === "n")
 			background_image = false;
-
-		this.aelement.setAttribute("visible", "");
 	
 		if(dom2aframe.transparent != background_color || background_image){ //Check if the element is not transparent or has a background image
 			if(this.isUrl(background_image)){//Check if the path to the background image is a legitimate url
@@ -513,7 +539,6 @@ class ImageElement extends Element{
 		//Set the source of the element, this is the id  of the image element in the a-asset tag
 		this.aelement.setAttribute("src","#"+asset_manager.GetAsset(this.domelement.getAttribute("src"),"img"));
 		//Set alphaTest on 0.5, this makes that if a PNG uses alpha, that alpha is respected and not just white
-		this.aelement.setAttribute("material","alphaTest: 0.5");
 
 		this.setId();
 		this.addFunctionality();

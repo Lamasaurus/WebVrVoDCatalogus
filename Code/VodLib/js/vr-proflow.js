@@ -3,9 +3,6 @@
 let filmsPerCategory = new Map();
 
 const placeholderImage = "css/img/thumb-placeholder.jpg";
-const articleWidth = 196;
-const articleWidthPx = "196px";
-const artsInCarousel = 5;
 
 function createCategory(category) {
 	let section = document.createElement("section");
@@ -16,7 +13,7 @@ function createCategory(category) {
 	addClass(section, "carouselActive");
 	section.innerHTML = "" +
 		"<header>" +
-		"\t<span class=\"sectiontooltip\" data-tip=\"0 films\">" + category.name + "</span>" +
+		"\t<span class=\"popupheader\" data-tip=\"0 films\">" + category.name + "</span>" +
 		"</header>" +
 		"<div class=\"main carouselMain\">" +
 		"\t<div style='overflow: hidden;' class=\"carouselWrapper\" data-id=\"" + category.id + "\"></div>" +
@@ -33,13 +30,12 @@ function createCategory(category) {
 
 function createArticle(film) {
 	let article = document.createElement("article");
-	article.style.width = articleWidthPx;
 	article.dataset["vodId"] = film["standardid"];
 	article.dataset["type"] = "vod";
 	article.setAttribute("itemscope", "itemscope");
 	addClass(article, "vod");
 	addClass(article, "thumb");
-	article.innerHTML = "\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + ");\" onmouseenter=\"this.setAttribute('style', '--vr-z: 0.1;');\" onmouseleave=\"this.setAttribute('style', '--vr-z:;');\" return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">";
+	article.innerHTML = "\t<img onclick=\"openVodPopup(" + article.dataset["vodId"] + ");\" hover='hover' return false;\" src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">";
 
 	return article;
 }
@@ -82,12 +78,6 @@ function storeFilms(categoryId, data) {
 		}
 	} else {
 		console.error("Can't find section of category id " + categoryId);
-	}
-	let span = section.getElementsByClassName("sectiontooltip")[0];
-	if ( span ) {
-		span.dataset["tip"] = data.length + " films";
-	} else {
-		console.error("Couldn't find span element of category id " + categoryId);
 	}
 }
 
@@ -177,25 +167,26 @@ function createPopupArticle(film) {
 	let divEl = document.createElement("div");
 	addClass(divEl, "main");
 	divEl.innerHTML =
-		"<article itemtype=\"http://schema.org/CreativeWork\" itemscope=\"itemscope\" class=\"vod overlay\" >" +
+		"<article itemtype=\"http://schema.org/CreativeWork\" itemscope=\"itemscope\" class=\"vod overlay fadein\" >" +
 		"\t<header>" +
 		"\t\t<div class=\"titleWrap\">" +
-		"\t\t\t<h1><span itemprop=\"name\">" + film["title"] + "</span></h1>" +
+		"\t\t\t<h1 itemprop=\"name\">" + film["title"] + "</h1>" +
 		"\t\t</div>" +
 		"\t</header>" +
 		"\t<div class=\"main\">" +
 		"\t\t<div class=\"scrollThumb\"></div>" +
 		"\t\t<div class=\"wrap\">" +
-		"\t\t\t\t<div class=\"image thumb\">" +
-		"\t\t\t\t\t\t<img src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
-		"\t\t\t\t</div>" +
+		"\t\t\t<div class=\"image thumb\">" +
+		"\t\t\t\t\t<img src=\"" + film["imageposter"] + "\" onerror=\"this.onerror = null; this.src='" + placeholderImage + "';\" alt=\"" + film["title"] + "\">" +
+		"\t\t\t</div>" +
+		"\t\t\t<div class='popupinfo'>"+
 		"\t\t\t<section class=\"fiche info\">" +
-		addSpecsForFilmPopup("Regie", film["directors"]) +
-		addSpecsForFilmPopup("Duur", duration) +
-		addSpecsForFilmPopup("Jaar", film["yearofproduction"]) +
-		addSpecsForFilmPopup("Genre", film["genre"]) +
-		addSpecsForFilmPopup("Taal", film["mainlanguage"]) +
-		addSpecsForFilmPopup("Cast", film["actors"]) +
+		addSpecsForFilmPopup("Regie: ", film["directors"]) +
+		addSpecsForFilmPopup("Duur: ", duration) +
+		addSpecsForFilmPopup("Jaar: ", film["yearofproduction"]) +
+		addSpecsForFilmPopup("Genre: ", film["genre"]) +
+		addSpecsForFilmPopup("Taal: ", film["mainlanguage"]) +
+		addSpecsForFilmPopup("Cast: ", film["actors"]) +
 		"\t\t\t</section>" +
 		"\t\t\t<div class=\"iconList\">" +
 		"\t\t\t\t<ul>" + icons + "</ul>" +
@@ -203,14 +194,15 @@ function createPopupArticle(film) {
 		"\t\t\t<div class=\"actions\">" +
 		"\t\t\t</div>" +
 		"\t\t</div>" +
-		"\t\t<section itemprop=\"description\" class=\"textblock\">" +
+		"\t\t<section itemprop=\"description\" class=\"textblock description\">" +
 		"\t\t\t<p>" + truncate(film["synopsisshort"], 270) + "</p>" +
-		"\t\t\t<div class=\"lnkMore\">" +
-		"\t\t\t\t<a itemprop=\"url\" href=\"#\" onclick=\"startPlayer(); return false;\">Kijk nu &raquo;</a>" +
+		"\t\t\t<div class='speelnuknop' hover='hover' show-player onclick=\"startPlayer(); return false;\" class=\"lnkMore\">" +
 		"\t\t\t</div>" +
 		"\t\t</section>" +
 		"\t</div>" +
 		"</article>";
+
+	divEl.setAttribute("onclick","closeVodPopup();");
 
 	return divEl;
 }
@@ -244,9 +236,9 @@ function closeVodPopup() {
 		stopPlayer();
 		return;
 	}
-	let jPopElements = document.getElementsByClassName("jPop");
-	for ( let i = jPopElements.length-1; i > -1; --i ) {
-		removeClass(jPopElements[i], "jPop");
+	let overlayVod = document.getElementById("ovrVOD");
+	while ( overlayVod.lastChild ) {
+		overlayVod.removeChild(overlayVod.lastChild);
 	}
 	window.removeEventListener("keydown", closeOnEsc, false);
 }

@@ -2,7 +2,7 @@
 var debugging = true;
 
 //Amount of frames per second that animations should be updated with
-var animation_fps = 30;
+var animation_fps = 25;
 
 //The size of the CSS refference pixel
 var pixels_per_meter = 100/0.26;
@@ -96,7 +96,7 @@ class Dom2Aframe{
 	}
 
 	initVideoElement(body_width){
-		this.video_element = new VideoElement({x:body_width/2, y:-body_width/4, z:this.camera.getCameraDistance()});
+		this.video_element = new VideoElement({x:0, y:-body_width/4, z:this.camera.getCameraDistance()});
 	    this.a_scene.appendChild(this.video_element.GetElement());
 	    this.video_element.SetScource("iwb");
 	}
@@ -116,6 +116,9 @@ class Dom2Aframe{
 		//Events for when we enter and exit vr
 		this.a_scene.addEventListener("enter-vr",this.enterVr.bind(this));
 	    this.a_scene.addEventListener("exit-vr",this.exitVr.bind(this));
+
+	    //Event to update when scrolling
+	    window.onscroll = (function(){this.somethingdirty = true;}).bind(this);
 	}
 
 	initStyles(){

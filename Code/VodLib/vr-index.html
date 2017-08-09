@@ -15,12 +15,19 @@
 			<div id="posters"></div>
 
 			<div id="navigation">
-				<div id="categories"></div>
+				<nav class="sub">
+					<ul id="subnav">
+						<li hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
+						<li hover="hover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
+						<li hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">Series</a></li>
+						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page">Kids</a></li>
+						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page">Sport</a></li>
+						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page passion">Passion</a></li>
+					</ul>
+				</nav>
 			</div>
 
 			<div id="filter"></div>
-
-			<div id="popup"></div>
 
 			<div id="ovrVOD"></div>
 		</div>
