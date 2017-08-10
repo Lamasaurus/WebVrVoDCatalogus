@@ -4,6 +4,8 @@ var grabbing = false;
 //The id for elements
 var element_id = 0;
 
+var d = new Date();
+
 //Class to represent a position
 class Position{
     constructor(){
@@ -13,12 +15,20 @@ class Position{
         this.height = 0;
     }
 
-    copyPosition(pos){
+    copyPosition(pos, elem){
         this.vector[0] = Number(pos.left);
     	this.vector[1] = Number(pos.top);
 
-        this.width = pos.width;
-        this.height = pos.height;
+    	//clientWidth/Height give the real width and height, pos.width/height give the width and height of the element when we put a box around it (takes transformations in account)
+        this.width = elem.clientWidth;
+        if(this.width == 0)
+        	this.width = pos.width;
+        this.height = elem.clientHeight;
+        if(this.height == 0)
+        	this.height = pos.height;
+
+        this.html_width = pos.width;
+        this.html_height = pos.height;
     }
 }
 
@@ -158,7 +168,7 @@ class Element{
     }
 
     //Stop the animation and update one last time
-    stopAnimation(event){
+    stopAnimation(){
     	//Stop the event from propagating to parent elements
     	event.stopPropagation();
     	log("Animation stopt");
@@ -257,6 +267,24 @@ class Element{
     	return computed_style.getPropertyValue(name).trim();
     }
 
+    getRotation(computed_style){
+    	var tr = computed_style.getPropertyValue("transform");
+
+    	if(tr == "none")
+    		return false;
+
+		var values = tr.split('(')[1];
+		values = values.split(')')[0];
+		values = values.split(',');
+
+		var a = values[0];
+		var b = values[1];
+
+		var angle = -Math.round(Math.atan2(b, a) * (180/Math.PI));
+
+		return angle;
+    }
+
     getTransormation(computed_style){
     	//Get the newest position data
     	this.updatePosition();
@@ -308,18 +336,30 @@ class Element{
 
 		//If there is a special vr scale deffined, use that
 		var rotation = computed_style.getPropertyValue("--vr-rotate").trim();
+
 		if(rotation != "null"){
 			rotation = rotation.split(" ");
 
 			this.transformation.setRotate(rotation[0], rotation[1], rotation[2]);
 		}else
 			this.transformation.setRotate(0, 0, 0);
+
+		var angle = this.getRotation(computed_style);
+		if(angle){
+			//Add the angel to the already excisting angle
+			this.transformation.rotation[2] += Number(angle);
+
+			//Because html calculates its bounding rect with the transformation in (the bounding rect gets bigger and the position is higher and more to the left), we have to account for that
+			this.transformation.position[0] += (this.position.html_width - this.position.width)/2;
+			this.transformation.position[1] += (this.position.html_height - this.position.height)/2;
+		}
+
     }
 
     //Calc the position of the element relative to its parent
     updatePosition(){
 	    this.position = new Position();
-		this.position.copyPosition(this.domelement.getBoundingClientRect());
+		this.position.copyPosition(this.domelement.getBoundingClientRect(), this.domelement);
 
 	    if(this.is_separate)//The vr position is different from the page position if the element is separate
 	    	this.vr_position = this.transformation.position;

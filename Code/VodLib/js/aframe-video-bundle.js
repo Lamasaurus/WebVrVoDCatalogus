@@ -114,6 +114,15 @@ class VideoElement{
 		home_button.setAttribute("position", {x:0.7, y:0, z:0});
 		this.vidcontrol.appendChild(home_button);
 
+		//Create a mode toggle to add to the video controlls
+		var mode_toggle = document.createElement("a-image");
+		mode_toggle.setAttribute("src","icon/mode-toggle.svg");
+		mode_toggle.setAttribute("height","0.15");
+		mode_toggle.setAttribute("width","0.3");
+		mode_toggle.onclick = (function(){this.ToggleMode();}).bind(this);
+		mode_toggle.setAttribute("position", {x:0, y:-0.225, z:0});
+		this.vidcontrol.appendChild(mode_toggle);
+
 		this.video_element.appendChild(this.vidcontrol);
 
 	    this.hassrc = true;

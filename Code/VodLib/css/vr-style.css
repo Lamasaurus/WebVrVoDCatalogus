@@ -8,6 +8,7 @@ body{
 }
 
 .thumb img{
+	max-height: 1000px;
 	width: 90%;
 	margin-top: 10px;
 }
@@ -22,7 +23,7 @@ body{
 	70% {--vr-z: 0.07;}
 	80% {--vr-z: 0.08;}
 	90% {--vr-z: 0.09;}
-    100% { --vr-z: 0.1; }
+    100% {--vr-z: 0.1;}
 }
 
 .thumb .hover{
@@ -123,7 +124,7 @@ body{
 }
 
 .fadein{
-    animation: fadein 1s forwards;
+    animation: fadein 0.8s forwards;
 }
 
 #navigation{
@@ -164,4 +165,85 @@ body{
 
 .speelnuknop.hover{
 	background-image: url('img/kijknu-active.svg');
+}
+
+.carouselheader{
+	background: black;
+}
+
+.carouselheader span{
+	font-size: 40px;
+}
+
+.carouselheader .collaps-img{
+	width: 40px;
+	height: 40px;
+	float: right;
+	background-image: url('img/uitklap-noactive.svg');
+	transform: rotate(180deg);
+}
+
+.carouselheader.hover .collaps-img{
+	background-image: url('img/uitklap-active.svg');
+}
+
+.carouselheader.hover{
+	background-color:#4f4c00;
+}
+
+.carouselMain{
+	max-height: 1000px;
+}
+
+@keyframes collaps {
+    to   { max-height: 0; }
+}
+
+@keyframes imgcollaps {
+    to   { max-height: 0; opacity: 0.5; }
+}
+
+.collaps .carouselMain{
+	animation: collaps 1s forwards;
+}
+
+.collaps .carouselMain .carouselWrapper img{
+	animation: imgcollaps 0.8s forwards;
+}
+
+@keyframes decollaps {
+	from { max-height: 0; }
+    to   { max-height: 1000; }
+}
+
+@keyframes imgdecollaps {
+	from { max-height: 0; opacity: 0.5;}
+    to   { max-height: 1000; opacity: 1;}
+}
+
+.decollaps .carouselMain{
+	animation: decollaps 1s forwards;
+}
+
+.decollaps .carouselMain .carouselWrapper img{
+	animation: imgdecollaps 1.2s forwards;
+}
+
+/*Rotating klap knoppen*/
+@keyframes klaprotate {
+	from { transform: rotate(180deg); }
+    to   { transform: rotate(0deg); }
+}
+
+.collaps header .collaps-img{
+	animation: klaprotate 0.8s forwards;
+}
+
+@keyframes deklaprotate {
+	from { transform: rotate(0deg); }
+    to   { transform: rotate(180deg); }
+}
+
+.decollaps header .collaps-img{
+	animation: deklaprotate 0.8s forwards;
 }

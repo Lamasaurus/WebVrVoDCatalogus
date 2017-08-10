@@ -263,10 +263,12 @@ class Dom2Aframe{
 
 	enterVr(){
 	    this.changing_style.innerHTML = this.invr_css;
+	    this.invr = true;
 	}
 
 	exitVr(){
 	    this.changing_style.innerHTML = this.outvr_css;
+	    this.invr = false;
 	}
 
 	//Controls 

@@ -12,10 +12,11 @@ function createCategory(category) {
 	addClass(section, "vods");
 	addClass(section, "carouselActive");
 	section.innerHTML = "" +
-		"<header>" +
-		"\t<span class=\"popupheader\" data-tip=\"0 films\">" + category.name + "</span>" +
+		"<header class=\"carouselheader\" hover='hover' onclick='collapsCategory(\""+ category.id +"\",this)'>" +
+		"\t<span data-tip=\"0 films\">" + category.name + "</span>" +
+		"\t<div class=\"collaps-img\"></div>" +
 		"</header>" +
-		"<div class=\"main carouselMain\">" +
+		"<div id=\"car-main"+ category.id +"\" class=\"main carouselMain\">" +
 		"\t<div style='overflow: hidden;' class=\"carouselWrapper\" data-id=\"" + category.id + "\"></div>" +
 		"</div>" +
 		"<header>" +
@@ -26,6 +27,23 @@ function createCategory(category) {
 		"</header>";
 
 	return section;
+}
+
+function collapsCategory(element,domel){
+	var list = document.getElementById(element).classList; 
+	if(list.contains("collaps")){
+		list.remove("collaps"); 
+		list.add("decollaps");
+		document.getElementById("car-main"+ element).addEventListener("animationend", 
+															function(){
+																document.getElementById(element).classList.remove("decollaps");
+																return true;
+															});
+	}else{
+		list.remove("decollaps");
+		list.add("collaps");
+		//document.getElementById("car-body-"+ element).addEventListener("animationend", function(){document.getElementById("car-body-"+ element).classList.remove("collaps");});
+	}
 }
 
 function createArticle(film) {
