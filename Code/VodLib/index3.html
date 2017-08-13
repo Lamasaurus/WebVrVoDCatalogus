@@ -9,27 +9,20 @@
 	<link href="icon/favicon.ico" rel="shortcut icon" type="image/x-icon">
 
 	<style type="text/css">
-		#page{
-			background-color: gray;
-			overflow: hidden;
-			padding: 10px;
-			width: 700px;
-		}
-
 		body{
 			background: none;
 		}
 
-		p{
-			max-width: 500px;
+		.hoverer{
+			background-color: blue;
+			width: 100px;
+			height: 100px;
+			margin-left: 20px;
 			float: left;
-			font-size: 20px;
-			color: white;
 		}
 
-		img{
-			width: 200px;
-			float: left;
+		.hoverer.hover{
+			background-color: green;
 		}
 	</style>
 	
@@ -38,12 +31,9 @@
 
 	<div id="page">
 		
-		<h1>Lorem ipsum</h1>
-		<p>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		</p>
-
-		<img src="img/aout_1914.jpg">
+		<div class="hoverer" hover="hover"></div>
+		<div class="hoverer" hover="hover"></div>
+		<div class="hoverer" hover="hover"></div>
 
 	</div>
 

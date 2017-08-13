@@ -34,7 +34,12 @@ class Dom2Aframe{
 		this.dynamic_add_elements = true;
 
 	    //The a-scene that will contain all A-frame code
-		this.a_scene = document.createElement("a-scene");
+	    var a_scenes = document.getElementsByTagName("a-scene");
+	    if(a_scenes.length)
+			this.a_scene = a_scenes[0];
+		else
+			this.a_scene = document.createElement("a-scene");
+
 		//Set embedded so it can be part of the dom page
 		//this.a_scene.setAttribute("embedded",'');
 
@@ -65,7 +70,8 @@ class Dom2Aframe{
 	    	this.a_scene.setAttribute("stats", true);*/
 
 	    //Append the a-scene to the body
-	    document.body.appendChild(this.a_scene);
+	    if(!a_scenes.length)
+	    	document.body.appendChild(this.a_scene);
 
 	    //Indicates that something was dirty and all other elements should check if they changed
 		this.somethingdirty = false;

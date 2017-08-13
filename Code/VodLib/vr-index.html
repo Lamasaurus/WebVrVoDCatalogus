@@ -17,7 +17,7 @@
 			<div id="navigation">
 				<nav class="sub">
 					<ul id="subnav">
-						<li hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
+						<li vr-id="listitemvr" hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
 						<li hover="hover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
 						<li hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">Series</a></li>
 						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page">Kids</a></li>
@@ -32,17 +32,20 @@
 			<div id="ovrVOD"></div>
 		</div>
 
+
 		<script src="js/vr-proflow.js"></script>
 		<!--
 		-->
 		<script src="js/dash.all.min.js"></script>
 
-		<script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
+		<script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
+		<script src="js/element-resize-detector.min.js"></script>
+
+		<script src="https://cdn.rawgit.com/zcanter/aframe-gradient-sky/master/dist/gradientsky.min.js"></script>
 
 		<script src="js/aframe-video-bundle.js"></script>
 		<script src="js/aframe-stereo-component.js"></script>
 		<script src="js/aframe-video-controls.js"></script>
-		<script src="https://cdn.rawgit.com/zcanter/aframe-gradient-sky/master/dist/gradientsky.min.js"></script>
 
 		<script src="js/dom2aframe-assetmanager.js"></script>
 		<script src="js/dom2aframe-elements.js"></script>

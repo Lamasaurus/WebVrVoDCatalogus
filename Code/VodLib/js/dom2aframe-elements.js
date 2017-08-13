@@ -89,8 +89,11 @@ class Element{
 
 	//Sets the id of the element
 	setId(){
-		this.id = element_id++;
-		this.aelement.setAttribute("id","ge_"+this.id);
+		if(this.domelement.hasAttribute("vr-id"))
+			this.id = this.domelement.getAttribute("vr-id");
+		else
+			this.id = "ge_"+ (++element_id);
+		this.aelement.setAttribute("id",this.id);
 
 		this.aelement.domelement = this.domelement;
 		this.domelement.aelement = this.aelement;
@@ -154,6 +157,22 @@ class Element{
 
 		if(is_clickable)
 			this.aelement.classList.add('clickable');
+
+		if(this.domelement.tagName == "BODY"){
+			// Element resize detector, defined on the body to check when the body changes size
+			// With the ultra fast scroll-based approach. 
+			this.erd = elementResizeDetectorMaker({
+			  strategy: "scroll"
+			});
+
+		    
+		    this.erd.listenTo(this.domelement, (function(){ 
+		    								var pos = new Position();
+		    								pos.copyPosition(this.domelement.getBoundingClientRect(), this.domelement); 
+		    								if(this.position.width != pos.width)
+		    									this.setSubtreeDirty.bind(this);
+		    							}).bind(this));
+		}
 	}
 
 	//At the start of an animation, we want to start an interval to update this element every so often
@@ -267,22 +286,26 @@ class Element{
     	return computed_style.getPropertyValue(name).trim();
     }
 
-    getRotation(computed_style){
+    //Extracts the 2D transformation (scale and rotation) from the transform matrix
+    getCSSTransformation(computed_style){
     	var tr = computed_style.getPropertyValue("transform");
 
     	if(tr == "none")
     		return false;
 
 		var values = tr.split('(')[1];
+		if(values == undefined)
+			return false;
 		values = values.split(')')[0];
 		values = values.split(',');
 
 		var a = values[0];
 		var b = values[1];
 
-		var angle = -Math.round(Math.atan2(b, a) * (180/Math.PI));
+		this.CSSangle = -Math.round(Math.atan2(b, a) * (180/Math.PI));
+		this.CSSscale = Math.sqrt(a*a + b*b);
 
-		return angle;
+		return true;
     }
 
     getTransormation(computed_style){
@@ -344,10 +367,13 @@ class Element{
 		}else
 			this.transformation.setRotate(0, 0, 0);
 
-		var angle = this.getRotation(computed_style);
-		if(angle){
+		if(this.getCSSTransformation(computed_style)){
+
+			this.transformation.scale[0] *= this.CSSscale;
+			this.transformation.scale[1] *= this.CSSscale;
+
 			//Add the angel to the already excisting angle
-			this.transformation.rotation[2] += Number(angle);
+			this.transformation.rotation[2] += Number(this.CSSangle);
 
 			//Because html calculates its bounding rect with the transformation in (the bounding rect gets bigger and the position is higher and more to the left), we have to account for that
 			this.transformation.position[0] += (this.position.html_width - this.position.width)/2;

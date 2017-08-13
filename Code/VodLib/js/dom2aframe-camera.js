@@ -14,6 +14,7 @@ class Camera{
 		this.aelement.setAttribute("wasd-controls-enabled", "true");
 		this.setPosition({x: 0, y: -1, z:this.camera_distance});
 
+
 		this.has_cursor = true;
 
 		//Cursor
@@ -22,10 +23,15 @@ class Camera{
 		this.cursor.setAttribute("fuse-timeout",500);
 		this.cursor.setAttribute("position", "0 0 -0.1");
 		this.cursor.setAttribute("size", "0.1");
-		this.cursor.setAttribute("color","green");
+		this.cursor.setAttribute("color","#ffc421");
 		this.cursor.setAttribute("geometry", "primitive: ring; radiusInner: 0.0005; radiusOuter: 0.001")
 		this.cursor.setAttribute("raycaster","objects: .clickable; far: 90;")
 		this.aelement.appendChild(this.cursor);
+		
+		if(!AFRAME.utils.checkHeadsetConnected() && !AFRAME.utils.isMobile() && !AFRAME.utils.isGearVR()){
+			this.removeCursor();
+			this.aelement.setAttribute("cursor","rayOrigin: mouse; raycaster: objects: .clickable; far: 90;");
+		}
 
 		//Cursor animations, triggers an animation and thus updateall. Thats why it is in comments
 		/*click_animation = document.createElement("a-animation");

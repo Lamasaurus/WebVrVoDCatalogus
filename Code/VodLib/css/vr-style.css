@@ -3,6 +3,10 @@ body{
 	color: #fff;
 }
 
+p{
+	font-size: 1.5em;
+}
+
 .carouselWrapper article{
 	width: 20%;
 }
@@ -40,7 +44,7 @@ body{
 	--vr-position: absolute;
 	--vr-z: 0.5;
 	--vr-x: 0;
-	--vr-y: .1;
+	--vr-y: 1;
 }
 
 .fiche .label{
@@ -133,7 +137,7 @@ body{
 
 #navigation .sub{
 	--vr-position: absolute;
-	--vr-x:-0.8;
+	--vr-x:-2;
 	--vr-y:0.6;
 	--vr-z:-0.6;
 	--vr-rotate:0 80 0;
@@ -142,7 +146,7 @@ body{
 #subnav {
 	width: 300px;
 	list-style: none;
-	font-size: 30px;
+	font-size: 40px;
 	padding: 0;
 }
 
@@ -172,7 +176,7 @@ body{
 }
 
 .carouselheader span{
-	font-size: 40px;
+	font-size: 60px;
 }
 
 .carouselheader .collaps-img{

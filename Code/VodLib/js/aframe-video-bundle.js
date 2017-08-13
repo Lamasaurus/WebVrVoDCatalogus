@@ -14,7 +14,7 @@ class VideoElement{
 		this.SetPosition(position);
 
 		//0=flat 1=spheric 2=stereographic spheric
-	    this.mode = 0;
+	    this.mode = 1;
 	    this.hassrc = false;
 	}
 
@@ -67,6 +67,7 @@ class VideoElement{
 		this.flatvid.setAttribute("id","flatvid");
 		this.flatvid.setAttribute("width","16");
 		this.flatvid.setAttribute("height","9");
+		this.flatvid.setAttribute("visible","false");
 		this.flatvid.setAttribute("position","0 0 -6");
 		this.flatvid.setAttribute("src","#"+source);
 		this.video_element.appendChild(this.flatvid);
@@ -75,7 +76,6 @@ class VideoElement{
 		this.sphericalvid = document.createElement("a-videosphere");
 		this.sphericalvid.setAttribute("id","sphericalvid");
 		this.sphericalvid.setAttribute("radius","80");
-		this.sphericalvid.setAttribute("visible","false");
 		this.sphericalvid.setAttribute("rotation","0 180 0");
 		this.sphericalvid.setAttribute("src","#"+source);
 		this.video_element.appendChild(this.sphericalvid);
