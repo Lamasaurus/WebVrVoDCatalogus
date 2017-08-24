@@ -403,21 +403,12 @@ function loadJSON(url) {
 	});
 }
 
-var loaded_categorys = 0, categoryCount = 0;
-function dispatchLoadedEvent(){
-	loaded_categorys++;
-
-	if(loaded_categorys >= categoryCount)
-		document.dispatchEvent(new Event('page_fully_loaded'));
-}
-
 function init() {
 	loadJSON("json/categories.json").then(function (categories) {
 		let sequence = Promise.resolve();
 		let parallelPromises = [];
 
 		let categoryContainer = document.getElementById("carouselContainer");
-		categoryCount = 0;
 
 		let styling = document.createElement("style");
 		styling.setAttribute("id","animations");
@@ -425,7 +416,6 @@ function init() {
 
 		for ( let categoryId in categories ) {
 			if ( categories.hasOwnProperty(categoryId) ) {
-				++categoryCount;
 
 				let category = categories[categoryId];
 				category["id"] = categoryId;
@@ -436,7 +426,6 @@ function init() {
 				}).then(function (categoryData) {
 					storeFilms(category["id"], categoryData);
 					showFilms(category["id"]);
-					dispatchLoadedEvent();
 				}).catch(function (error) {
 					console.error("Downloading data for category " + category["id"] + " failed:", error);
 				});

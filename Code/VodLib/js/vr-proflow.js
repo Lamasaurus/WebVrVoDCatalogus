@@ -4,6 +4,9 @@ let filmsPerCategory = new Map();
 
 const placeholderImage = "css/img/thumb-placeholder.jpg";
 
+let movies = ["city-4096-mp4-30fps-x264-ffmpeg.mp4"];
+let next_mov = 0;
+
 function createCategory(category) {
 	let section = document.createElement("section");
 	section.dataset["pattern"] = "swipe";
@@ -41,7 +44,6 @@ function collapsCategory(element,domel){
 	}else{
 		list.remove("decollaps");
 		list.add("collaps");
-		//document.getElementById("car-body-"+ element).addEventListener("animationend", function(){document.getElementById("car-body-"+ element).classList.remove("collaps");});
 	}
 }
 
@@ -213,7 +215,7 @@ function createPopupArticle(film) {
 		"\t\t</div>" +
 		"\t\t<section itemprop=\"description\" class=\"textblock description\">" +
 		"\t\t\t<p>" + truncate(film["synopsisshort"], 270) + "</p>" +
-		"\t\t\t<div class='speelnuknop' hover='hover' show-player onclick=\"startPlayer(); return false;\" class=\"lnkMore\">" +
+		"\t\t\t<div class='speelnuknop' hover='hover' play-video='video/"+ movies[(++next_mov%movies.length)] +"' onclick=\"startPlayer(); return false;\" class=\"lnkMore\">" +
 		"\t\t\t</div>" +
 		"\t\t</section>" +
 		"\t</div>" +
@@ -342,13 +344,6 @@ function loadJSON(url) {
 	});
 }
 
-var loaded_categorys = 0, categoryCount = 0;
-function dispatchLoadedEvent(){
-	loaded_categorys++;
-
-	if(loaded_categorys >= categoryCount)
-		document.dispatchEvent(new Event('page_fully_loaded'));
-}
 
 function init() {
 	loadJSON("json/categories.json").then(function (categories) {
@@ -356,11 +351,9 @@ function init() {
 		let parallelPromises = [];
 
 		let categoryContainer = document.getElementById("posters");
-		categoryCount = 0;
 
 		for ( let categoryId in categories ) {
 			if ( categories.hasOwnProperty(categoryId) ) {
-				++categoryCount;
 
 				let category = categories[categoryId];
 				category["id"] = categoryId;
@@ -371,7 +364,6 @@ function init() {
 				}).then(function (categoryData) {
 					storeFilms(category["id"], categoryData);
 					showFilms(category["id"]);
-					dispatchLoadedEvent();
 				}).catch(function (error) {
 					console.error("Downloading data for category " + category["id"] + " failed:", error);
 				});

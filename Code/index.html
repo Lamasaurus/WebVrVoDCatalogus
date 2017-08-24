@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nl">
+	<head>
+		<title>Index</title>
+		<style type="text/css">
+			.wrapper{
+				background-color: white;
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+			}
+
+			.category{
+				float: left;
+				width: 400px;
+			}
+
+			p, a{
+				font-size: 30px;
+			}
+
+			a.hover{
+				color: green;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<h1>Examples</h1>
+			<div class="category">
+				<h2>Pure HTML and CSS:</h2>
+				<ul>
+					<li><a hover="hover" href="Other Methods/Pure HTML + CSS/index.html">Demo.</a></li>
+				</ul>
+			</div>
+			<div class="category">
+				<h2>CSS3D renderer:</h2>
+				<ul>
+					<li><a hover="hover" href="Other Methods/CSS3D/Demo/index.html">Demo.</a></li>
+					<li><a hover="hover" href="Other Methods/CSS3D/Sereographic/index.html">Sereographic by switching canvas.</a><p> Verander de scene van canvas na elke frame en draai de scene zo dat we twee perspectieven krijgen op de scene.</p></li>
+					<li><a hover="hover" href="Other Methods/CSS3D/Javascript/index.html">Javascript test.</a><p> Test om te kijken of javascript werkt op de DIVs met de CSS3D renderer.</p></li>
+					<li><a hover="hover" href="Other Methods/CSS3D/Stereographic Renderer/index.html">Sereographic renderer.</a><p> Hier gebruiken we de CSS3DStereographic renderer om een iframe te renderen.</p></li>
+				</ul>
+			</div>
+			<div class="category">
+				<h2>html2three:</h2>
+				<ul>
+					<li><a hover="hover" href="Other Methods/html2three/html2three/index.html">Demo.</a><p>Transcode html naar three.js elementen via SVG convertie.</p></li>
+					<li><a hover="hover" href="Other Methods/html2three/H2T Aframe/index.html">A-frame en H2T.</a><p>Zet al de html2three elementen in een A-frame scene.</p></li>
+				</ul>
+			</div>
+			<div class="category">
+				<h2>dom2aframe:</h2>
+				<ul>
+					<li><p>Druk op F om de pagina in full-screen VR te bekijken.</p><p>Of op O om enkel de canvas te bekijken.</p><p>Druk op M om de muis als cursor te gebruiken (werkt niet 100%).</p></li>
+					<li><a hover="hover" href="VodLib/index2.html">Basic elements.</a><p>Basis elementen voor een pagina. (Tekst, foto en container)</p></li>
+					<li><a hover="hover" href="VodLib/index3.html">Hover.</a><p>Demo waarbij we kunnen hoveren over de DIVs.</p></li>
+					<li><a hover="hover" href="VodLib/index4.html">Custome CSS.</a><p>Custome CSS demo.</p></li>
+					<li><a hover="hover" href="VodLib/index5.html">Dynamically add elements.</a><p>Voeg statische en geanimeerde DIVs dynamisch toe.</p></li>
+					<li><a hover="hover" href="VodLib/index.html">2D pagina naar VR.</a><p>Een pagina die gemaakt is voor 2D, omgezet naar 3D.</p></li>
+					<li><a hover="hover" href="VodLib/vr-index.html">VR pagina.</a><p>Een pagina die voor VR geoptimaliseerd is.</p></li>
+					<li><a hover="hover" href="VodLib/vr-index2.html">VR pagina with model.</a><p>Net als vorige pagina, maar met a-scene aangemaakt in html en een achtergrond om aan te tonen dat dom2aframe zichzelf gemaakt heeft in de bestaande scene.</p></li>
+				</ul>
+			</div>
+		</div>
+		<script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
+		<script src="https://cdn.rawgit.com/zcanter/aframe-gradient-sky/master/dist/gradientsky.min.js"></script>
+
+		<script src="../dom2aframe/element-resize-detector.min.js"></script>
+
+		<script src="../dom2aframe/aframe-stereo-component.js"></script>
+		<script src="../dom2aframe/aframe-video-controls.js"></script>
+		<script src="../dom2aframe/aframe-video-bundle.js"></script>
+
+		<script src="../dom2aframe/dom2aframe-assetmanager.js"></script>
+		<script src="../dom2aframe/dom2aframe-elements.js"></script>
+		<script src="../dom2aframe/dom2aframe-camera.js"></script>
+		<script src="../dom2aframe/dom2aframe-controllers.js"></script>
+		<script src="../dom2aframe/dom2aframe.js"></script>
+	</body>
+</html>

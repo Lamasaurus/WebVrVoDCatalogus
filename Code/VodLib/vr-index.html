@@ -15,43 +15,190 @@
 			<div id="posters"></div>
 
 			<div id="navigation">
+				<img src="icon/PRO-FLOW-logo-in-ellipse.png">
+				<nav class="main">
+					<ul id="mainnav">
+						<li hover="hover" onclick="switchActive(this,0)"><p>TV-KIJKEN</p></li>
+						<li hover="hover" onclick="switchActive(this,0)"><p>OPNAMES</p></li>
+						<li hover="hover" onclick="switchActive(this,0)"><p>TV-GIDS</p></li>
+						<li hover="hover" id="first-active-main" class="active" onclick="switchActive(this,0)"><p>TV-THEEK</p></li>
+						<li hover="hover" onclick="switchActive(this,0)"><p>INSTELLINGEN</p></li>
+					</ul>
+				</nav>
 				<nav class="sub">
 					<ul id="subnav">
-						<li vr-id="listitemvr" hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">In de Kijker</a></li>
-						<li hover="hover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><a href="#" class="page">Films</a></li>
-						<li hover="hover" onclick="switchActive(this,1)"><a href="#" class="page">Series</a></li>
-						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page">Kids</a></li>
-						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page">Sport</a></li>
-						<li hover="hover" onclick="switchActive(this,1);"><a href="#" class="page passion">Passion</a></li>
+						<li hover="hover" onclick="switchActive(this,1)"><p>In de Kijker</p></li>
+						<li hover="hover" id="first-active-sub" class="active" onclick="switchActive(this,1)"><p>Films</p></li>
+						<li hover="hover" onclick="switchActive(this,1)"><p>Series</p></li>
+						<li hover="hover" onclick="switchActive(this,1);"><p>Kids</p></li>
+						<li hover="hover" onclick="switchActive(this,1);"><p>Sport</p></li>
+						<li hover="hover" onclick="switchActive(this,1);"><p>Passion</p></li>
 					</ul>
 				</nav>
 			</div>
 
-			<div id="filter"></div>
+			<div id="filter">
+				<div>
+					<h1>Filters</h1>
+				</div>
+
+				<div class="iconfilter">
+					<img class="icon" src="media/6plus.svg">
+					<div hover="hover" onclick="switchActive(this,2, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,2, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/12plus.svg">
+					<div hover="hover" onclick="switchActive(this,3, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,3, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/16plus.svg">
+					<div hover="hover" onclick="switchActive(this,4, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,4, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/all-ages.svg">
+					<div hover="hover" onclick="switchActive(this,5, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,5, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/fear.svg">
+					<div hover="hover" onclick="switchActive(this,6, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,6, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/rude-language.svg">
+					<div hover="hover" onclick="switchActive(this,7, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,7, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/sex.svg">
+					<div hover="hover" onclick="switchActive(this,8, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,8, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+				<div class="iconfilter">
+					<img class="icon" src="media/violence.svg">
+					<div hover="hover" onclick="switchActive(this,9, true);" class="option">
+						<p>JA</p>
+					</div>
+					<div hover="hover" onclick="switchActive(this,9, true);" class="option">
+						<p>NEE</p>
+					</div>
+				</div>
+
+				<div class="dropdownfilter">
+					<div class="ddtitle">
+						<p>Taal: </p>
+					</div>
+
+					<div class="ddvalue" onclick="document.getElementById('language-dropdown').classList.add('opendropdown'); this.style.display = 'none'" id="languageoption"><p>Elke taal</p></div>
+					<div id="language-dropdown" class="dropdown">
+						<p class="dropdownoption" hover="hover" onclick="dropdownCllick('languageoption', this, 'language-dropdown')">Elke Taal</p>
+						<p class="dropdownoption" hover="hover" onclick="dropdownCllick('languageoption', this, 'language-dropdown')">Engels</p>
+						<p class="dropdownoption" hover="hover" onclick="dropdownCllick('languageoption', this, 'language-dropdown')">Frans</p>
+						<p class="dropdownoption" hover="hover" onclick="dropdownCllick('languageoption', this, 'language-dropdown')">Nederlands</p>
+					</div>
+				</div>
+
+				<div class="dropdownfilter">
+					<div class="ddtitle">
+						<p>Genre: </p>
+					</div>
+
+					<div class="ddvalue" onclick="document.getElementById('genre-dropdown').classList.add('opendropdown'); this.style.display = 'none'" id="genreoption"><p>Elk Genre</p></div>
+					<div id="genre-dropdown" class="dropdown">
+						<div class="ddrow">
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Elk Genre</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Actie</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Avontuur</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Drama</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Fantasy</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Gangster</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Historisch</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Horror</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Komedie</p>
+						</div>
+						<div class="ddrow">
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Kostuumdrama</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Melodrama</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Misdaad</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Musical</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Oorlog</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Passie</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Psychologische thriller</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Rampen</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Roadmovie</p>
+						</div>
+						<div class="ddrow">
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Romantisch</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Romantische komedie</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Sciencefiction</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Sport</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Sandalen</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Thriller</p>
+							<p class="dropdownoption" hover="hover" onclick="dropdownCllick('genreoption', this, 'genre-dropdown')">Western</p>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<div id="ovrVOD"></div>
+
+			<div id="scroll">
+				<div hover="hover" onclick="window.scrollBy(0, -300)" class="up"></div>
+				<div hover="hover" onclick="window.scrollBy(0, 300)" class="down"></div>
+			</div>
 		</div>
 
-
-		<script src="js/vr-proflow.js"></script>
-		<!--
-		-->
-		<script src="js/dash.all.min.js"></script>
-
 		<script src="https://aframe.io/releases/0.6.1/aframe.min.js"></script>
-		<script src="js/element-resize-detector.min.js"></script>
-
 		<script src="https://cdn.rawgit.com/zcanter/aframe-gradient-sky/master/dist/gradientsky.min.js"></script>
 
-		<script src="js/aframe-video-bundle.js"></script>
-		<script src="js/aframe-stereo-component.js"></script>
-		<script src="js/aframe-video-controls.js"></script>
+		<script src="https://rawgit.com/feiss/aframe-environment-component/master/dist/aframe-environment-component.min.js"></script>
 
-		<script src="js/dom2aframe-assetmanager.js"></script>
-		<script src="js/dom2aframe-elements.js"></script>
-		<script src="js/dom2aframe-camera.js"></script>
-		<script src="js/dom2aframe-controllers.js"></script>
-		<script src="js/dom2aframe.js"></script>
+		<script src="../dom2aframe/element-resize-detector.min.js"></script>
+
+		<script src="../dom2aframe/aframe-video-bundle.js"></script>
+		<script src="../dom2aframe/aframe-stereo-component.js"></script>
+		<script src="../dom2aframe/aframe-video-controls.js"></script>
+
+		<script src="../dom2aframe/dom2aframe-assetmanager.js"></script>
+		<script src="../dom2aframe/dom2aframe-elements.js"></script>
+		<script src="../dom2aframe/dom2aframe-camera.js"></script>
+		<script src="../dom2aframe/dom2aframe-controllers.js"></script>
+		<script src="../dom2aframe/dom2aframe.js"></script>
+
+		<script src="js/vr-proflow.js"></script>
+		<script src="js/dash.all.min.js"></script>
+
 
 		<script type="text/javascript">
 			var selected = new Array();
@@ -59,13 +206,24 @@
 			selected[1] = document.getElementById("first-active-sub");
 
 			//simple function to switch the active menu items
-			function switchActive(new_active, selector){
-				selected[selector].classList.remove("active");
-				new_active.classList.add("active");
-				selected[selector] = new_active;
+			function switchActive(new_active, selector, filter){
+				if(selected[selector])
+					selected[selector].classList.remove("active");
+
+				if((filter && selected[selector] != new_active) || !filter){
+					new_active.classList.add("active");
+					selected[selector] = new_active;
+				}
+				else
+					selected[selector] = null;
 			}
 
-			//document.dispatchEvent(new Event('page_fully_loaded'));
+			function dropdownCllick(option, value, dropdown){
+				document.getElementById(option).innerHTML = '<p>'+ value.innerHTML+'</p>';
+				document.getElementById(option).style.display = "inline";
+				document.getElementById(dropdown).classList.remove('opendropdown');
+			}
 		</script>
+
 	</body>
 </html>

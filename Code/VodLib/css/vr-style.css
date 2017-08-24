@@ -11,6 +11,8 @@ p{
 	width: 20%;
 }
 
+/* Posters */
+
 .thumb img{
 	max-height: 1000px;
 	width: 90%;
@@ -31,7 +33,6 @@ p{
 }
 
 .thumb .hover{
-	/*--vr-z: 0.1;*/
 	animation: gofront 0.1s forwards;
 }
 
@@ -39,12 +40,14 @@ p{
 	float: left;
 }
 
+/* Pop up */
+
 #ovrVOD{
 	width: 700px;
 	--vr-position: absolute;
 	--vr-z: 0.5;
 	--vr-x: 0;
-	--vr-y: 1;
+	--vr-y: 0.2;
 }
 
 .fiche .label{
@@ -131,45 +134,164 @@ p{
     animation: fadein 0.8s forwards;
 }
 
-#navigation{
-	width: 100%;
+.speelnuknop{
+	width: 100px;
+	height: 34px;
+	margin: auto;
+	background-image: url('img/kijknu-noactive.png');
 }
 
-#navigation .sub{
+.speelnuknop.hover{
+	background-image: url('img/kijknu-active.png');
+}
+
+/*Navigation*/
+
+#navigation{
+	width: 600px;
+	--vr-position: absolute;
+	--vr-x:-2.7;
+	--vr-y:0.6;
+	--vr-z:0.7;
+	--vr-rotate:0 80 0;
+
+	overflow: hidden;
+}
+
+#navigation img{
+	width: 100px;
+	display:block;
+	margin: auto;
+}
+
+/*#navigation .sub{
 	--vr-position: absolute;
 	--vr-x:-2;
 	--vr-y:0.6;
 	--vr-z:-0.6;
 	--vr-rotate:0 80 0;
-}
+}*/
 
-#subnav {
+#subnav, #mainnav {
 	width: 300px;
 	list-style: none;
 	font-size: 40px;
 	padding: 0;
+	height: 100%;
+	float: left;
 }
 
-#subnav li a{
-	text-decoration: none;
+#subnav li p, #mainnav li p{
 	color: #fff;
 	width:100%;
+	font-size: 40px;
 }
 
-#subnav .active a, #subnav .hover, #subnav .hover a{
+#subnav .active p, #subnav .hover p, #mainnav .active p, #mainnav .hover p{
 	color: #ffc421;
 }
 
-.speelnuknop{
-	width: 100px;
-	height: 34px;
-	margin: auto;
-	background-image: url('img/kijknu-noactive.svg');
+/* Filters */
+
+#filter{
+	width: 1400px;
+	--vr-position: absolute;
+	--vr-x:2.9;
+	--vr-y:0.6;
+	--vr-z:1.9;
+	--vr-rotate:0 -80 0;
+	overflow: hidden;
 }
 
-.speelnuknop.hover{
-	background-image: url('img/kijknu-active.svg');
+#filter h1{
+	font-size: 70px;
 }
+
+.iconfilter{
+	overflow: hidden;
+}
+
+.iconfilter .option, .iconfilter img{
+	float: left;
+}
+
+.iconfilter .option{
+	width: 150px;
+	font-size: 35px;
+	background-color: gray;
+	padding: 10px;
+	margin-left: 10px;
+}
+
+.iconfilter .option.active, .iconfilter .option.hover.active{
+	background-color: #ffc421;
+}
+
+.iconfilter .option p{
+	margin: 0;
+	text-align: center;
+}
+
+.iconfilter .option.hover{
+	background-color: #ffd770;
+}
+
+.iconfilter .icon{
+	height: 85px;
+}
+
+.dropdown{
+	display: none;
+	opacity: 0;
+	overflow: hidden;
+	background-color: gray;
+}
+
+#language-dropdown{
+	left: 100px;
+}
+
+#genre-dropdown{
+	left: 130px;
+}
+
+.dropdownfilter .ddtitle, .dropdownfilter .ddvalue{
+	float: left;
+}
+
+.dropdownfilter .ddvalue{
+	color: #ffc421;
+}
+
+.dropdownfilter{
+	font-size: 35px;
+	overflow: hidden;
+}
+
+.dropdownfilter p{
+	margin: 10px 0;
+}
+
+.dropdownfilter p.hover{
+	color: #ffc421;
+}
+
+@keyframes opendropdown {
+	from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.opendropdown{
+	animation: opendropdown 1s forwards;
+	display: block;
+}
+
+.ddrow{
+	float: left;
+	background-color: gray;
+}
+
+/* Carousel */
 
 .carouselheader{
 	background: black;
@@ -183,12 +305,12 @@ p{
 	width: 40px;
 	height: 40px;
 	float: right;
-	background-image: url('img/uitklap-noactive.svg');
+	background-image: url('img/uitklap-noactive.png');
 	transform: rotate(180deg);
 }
 
 .carouselheader.hover .collaps-img{
-	background-image: url('img/uitklap-active.svg');
+	background-image: url('img/uitklap-active.png');
 }
 
 .carouselheader.hover{
@@ -250,4 +372,36 @@ p{
 
 .decollaps header .collaps-img{
 	animation: deklaprotate 0.8s forwards;
+}
+
+/* Scroll */
+#scroll{
+	--vr-position: absolute;
+	--vr-x: -2.3;
+	--vr-y: 1.8;
+	--vr-z: 0.8;
+	--vr-rotate: -10 80 0;
+
+	width: 80px;
+}
+
+#scroll .up, #scroll .down{
+	width: 80px;
+	height: 80px;
+
+	background-image: url("img/carousel-next-hover.png");
+	background-size:cover;
+}
+
+#scroll .up{
+	transform: rotate(-90deg);
+	margin-bottom: 20px;
+}
+
+#scroll .down{
+	transform: rotate(90deg);
+}
+
+#scroll .up.hover, #scroll .down.hover{
+	background-image: url("img/carousel-next-active.png");
 }
